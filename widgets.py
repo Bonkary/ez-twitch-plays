@@ -128,17 +128,29 @@ class VerticalCommandInputs(QFrame):
         mainLayout = NoPadVBoxLayout()
         mainFrame.setLayout(mainLayout)
         
+        # Title
         titleFont = QFont()
         titleFont.setPointSize(const.gui.DEFAULT_FONT.pointSize()+5)
         title = QLabel(text="New Command")
         title.setAlignment(const.gui.ALIGN_CENTER)
         title.setFont(titleFont)
         
+        # Inputs
         self._nicknameInput = TitledLineEdit(title="Nickname", titlePlacement='side')
         self._keyInput = TitledLineEdit(title="Key", titlePlacement='side')
         self._pressCmdInput = TitledLineEdit(title="Press Cmd", titlePlacement='side')
         self._holdCmdInput = TitledLineEdit(title="Hold Cmd", titlePlacement='side')
         self._probInput = TitledLineEdit(title="Probability (0-100)", titlePlacement='side')
+        
+        # Buttons
+        buttonLayout = NoPadHBoxLayout()
+        self._clearButton = QPushButton(text="Clear")
+        self._clearButton.setStyleSheet("font-size: 15px;")
+        self._addButton = QPushButton(text="Add")
+        self._addButton.setStyleSheet("font-size: 15px;")
+        buttonLayout.addWidget(self._clearButton)
+        buttonLayout.addSpacing(20)
+        buttonLayout.addWidget(self._addButton)
         
         spacing = 10
         mainLayout.addWidget(title)
@@ -152,6 +164,9 @@ class VerticalCommandInputs(QFrame):
         mainLayout.addWidget(self._holdCmdInput)
         mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._probInput)
+        mainLayout.addSpacing(spacing)
+        mainLayout.addLayout(buttonLayout)
+        
         
         rootLayout.addStretch()
         rootLayout.addWidget(mainFrame)
@@ -196,7 +211,6 @@ class HorizontalCommandInputs(QFrame):
         self._keyInput = TitledLineEdit(title='Key', titlePlacement='top')
         self._pressInput = TitledLineEdit(title='Press Cmd', titlePlacement='top')
 
-
 class ComboButtonInputs(QFrame):
     def __init__(self):
         super().__init__()
@@ -225,6 +239,16 @@ class ComboButtonInputs(QFrame):
         self._holdInput = TitledLineEdit(title='Hold Cmd', titlePlacement='side', spacing=22, titleAlignment='right')
         self._probInput = TitledLineEdit(title='Probability', titlePlacement='side', spacing=14, titleAlignment='right')
         
+        # Buttons
+        buttonLayout = NoPadHBoxLayout()
+        self._clearButton = QPushButton(text="Clear")
+        self._clearButton.setStyleSheet("font-size: 15px;")
+        self._addButton = QPushButton(text="Add")
+        self._addButton.setStyleSheet("font-size: 15px;")
+        buttonLayout.addWidget(self._clearButton)
+        buttonLayout.addSpacing(20)
+        buttonLayout.addWidget(self._addButton)
+        
         spacing = 10
         mainLayout.addWidget(title)
         mainLayout.addSpacing(30)
@@ -237,9 +261,18 @@ class ComboButtonInputs(QFrame):
         mainLayout.addWidget(self._holdInput, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._probInput, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(20)
+        mainLayout.addLayout(buttonLayout)
         mainLayout.addStretch()
         
-
+class PresetManager(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        mainLayout = NoPadVBoxLayout()
+        self.setLayout(mainLayout)
+        
+        
 
    
         
