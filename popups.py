@@ -104,8 +104,8 @@ class ButtonComboInputs(QFrame):
         
         # Key Inputs
         keyInputsContainer = wdgts.NoPadHBoxLayout()
-        self._key1Input = wdgts.NamedLineEdit("Key 1", namePlacement='top')
-        self._key2Input = wdgts.NamedLineEdit("Key 2", namePlacement='top')
+        self._key1Input = wdgts.TitledLineEdit("Key 1", titlePlacement='top')
+        self._key2Input = wdgts.TitledLineEdit("Key 2", titlePlacement='top')
         
         keyInputsContainer.addWidget(self._key1Input)
         keyInputsContainer.addWidget(self._key2Input)
@@ -114,8 +114,8 @@ class ButtonComboInputs(QFrame):
         cmdInputsContainer = wdgts.NoPadVBoxLayout()
         cmdInputsContainer.setContentsMargins(0,0,7,0)
         cmdInputsContainer.setAlignment(gui.ALIGN_CENTER)
-        self._pressInput = wdgts.NamedLineEdit(name="Press", namePlacement='side')
-        self._holdInput = wdgts.NamedLineEdit(name="Hold", namePlacement='side')
+        self._pressInput = wdgts.TitledLineEdit(title="Press", titlePlacement='side')
+        self._holdInput = wdgts.TitledLineEdit(title="Hold", titlePlacement='side')
         
         cmdInputsContainer.addWidget(self._pressInput)
         cmdInputsContainer.addSpacing(15)

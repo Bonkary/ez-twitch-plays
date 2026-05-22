@@ -43,21 +43,19 @@ class TwitchPlays(QWidget):
         titleLabel = QLabel("Ez Twitch Plays", alignment=const.gui.ALIGN_CENTER)
         titleLabel.setFont(const.gui.TITLE_FONT)
         
-        self._dropdown = wdgts.NamedDropdown(title="Console", titlePlacement='top')
+        inputsLayout = wdgts.NoPadHBoxLayout()
         
-        inputsLayout = wdgts.NoPadVBoxLayout()
-        
-        self._singleInputs = wdgts.VerticalCommandInputs(name="New Command")
+        self._singleInputs = wdgts.VerticalCommandInputs()
         self._comboInputs = wdgts.ComboButtonInputs()
         
-        inputsLayout.addStretch()
+        inputsLayout.addSpacing(100)
         inputsLayout.addWidget(self._singleInputs)
-        inputsLayout.addWidget(self._comboInputs)
         inputsLayout.addStretch()
+        inputsLayout.addWidget(self._comboInputs)
+        inputsLayout.addSpacing(100)
         
         mainLayout.addSpacing(20)
         mainLayout.addWidget(titleLabel)
-        mainLayout.addSpacing(200)
         mainLayout.addLayout(inputsLayout)
         mainLayout.addStretch()
         
