@@ -1,56 +1,22 @@
 import os
 import json
 import sys
-from old.constants import *
+from constants import *
 
-# FILE OPERATIONS
-def write_empty_console_config_file() -> None:
-    with open(files.CONSOLE_CONFIGS, 'w') as newFile:
-        newFile.write(json.dumps(empty.CONSOLES))
+def add_new_preset(new_preset: dict) -> None:
+    pass
 
-def write_empty_settings_file() -> None:
-    with open(files.SETTINGS, 'w') as newFile:
-        newFile.write(json.dumps(empty.SETTINGS))
+def update_preset(*, current_preset: str, new_cmd: dict) -> None:
+    PRESETS[current_preset] = new_cmd
+    with open(files.PRESETS, 'w') as file:
+        file.write(json.dumps(PRESETS))
 
-def update_settings_file() -> None:
-    with open(files.SETTINGS, 'w') as settingsFile:
-        settingsFile.write(json.dumps(SETTINGS))
-
-def update_console_configs_file() -> None:
-    with open(files.CONSOLE_CONFIGS, 'w') as controlSchemeFile:
-        controlSchemeFile.write(json.dumps(CONSOLES))
-
-
-if not os.path.exists(dirs.CONFIGS):
-    os.mkdir(dirs.CONFIGS)
-
-##################### THE ACTUAL GOOD STUFF #############################
-
-# CONTROLS
-try:
-    with open(files.CONSOLE_CONFIGS, 'r') as schemesFile:
-        contents = schemesFile.read()
-        if not contents:
-            CONSOLES = empty.CONSOLES
-            write_empty_console_config_file()
-        else:
-            CONSOLES = json.loads(contents)
-except FileNotFoundError:
-    CONSOLES = empty.CONSOLES
-    write_empty_console_config_file()
-
-# SETTINGS
-try:
-    with open(files.SETTINGS, 'r') as settingsFile:
-        contents = settingsFile.read()
-        if not contents:
-            SETTINGS = empty.SETTINGS
-            write_empty_settings_file()
-        else:
-            SETTINGS = json.loads(contents)
-except FileNotFoundError:
-    SETTINGS = empty.SETTINGS
-    write_empty_settings_file()
-
+if os.path.exists(files.PRESETS):
+    with open(files.PRESETS, 'r') as file:
+        PRESETS = json.loads(file.read())
+else:
+    PRESETS = {}
+    with open(files.PRESETS, 'w') as file:
+        file.write(json.dumps(PRESETS))
 
 

@@ -12,6 +12,7 @@ COMMAND = 'command'
 PRESS = 'press'
 HOLD = 'hold'
 PROBABILITY = 'probability'
+NICKNAME = 'nickname'
 
 
 @dataclass
@@ -32,7 +33,9 @@ class const:
         LEFT_TO_RIGHT = QBoxLayout.Direction.LeftToRight
         RIGHT_TO_LEFT = QBoxLayout.Direction.RightToLeft
         TOP_TO_BOTTOM = QBoxLayout.Direction.TopToBottom
-        BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop 
+        BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
+        
+        PROMPT_WINDOW_SIZE = QSize(400,200)
         
     @dataclass
     class colors:
@@ -47,13 +50,13 @@ class const:
 @dataclass
 class dirs:
     ROOT = Path(__file__).resolve().parent
-    CONFIGS = os.path.join(ROOT, 'configs')
+    CONFIG = os.path.join(ROOT, 'config')
     TEMP = os.path.join(ROOT, 'temp')
 
 @dataclass
 class files:
-    CONSOLE_CONFIGS = os.path.join(dirs.ROOT, 'configs', 'console_configs.json')
-    SETTINGS = os.path.join(dirs.CONFIGS, 'settings.json')
+    PRESETS = os.path.join(dirs.ROOT, 'config', 'presets.json')
+    SETTINGS = os.path.join(dirs.CONFIG, 'settings.json')
 
 
 

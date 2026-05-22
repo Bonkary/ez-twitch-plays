@@ -1,9 +1,10 @@
 import sys
-from PySide6.QtCore import Qt, Slot, Signal
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton
+from PySide6.QtCore import Qt, Slot, Signal, QObject
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox
 from PySide6.QtGui import QPalette, QFont
 from constants import *
 from typing import Literal, Any
+from configurations import PRESETS, update_preset
 
 # General
 class TitledDropdown(QFrame):
@@ -95,6 +96,9 @@ class TitledLineEdit(QFrame):
     def setText(self, text: str) -> None:
         self._entry.setText(text)
 
+    def clear(self) -> None:
+        self._entry.setText("")
+
 # Layouts
 class NoPadHBoxLayout(QHBoxLayout):
     def __init__(self, **kwargs):
@@ -113,9 +117,13 @@ class NoPadVBoxLayout(QVBoxLayout):
         self.setSpacing(0)
 
 # Inputs
+class InputSignals(QObject):
+    addCommand = Signal(dict)
+
 class VerticalCommandInputs(QFrame):
     def __init__(self):
         super().__init__()
+        self.signals = InputSignals()
         
         margin = 8
         rootLayout = NoPadHBoxLayout()
@@ -172,44 +180,45 @@ class VerticalCommandInputs(QFrame):
         rootLayout.addWidget(mainFrame)
         rootLayout.addStretch()
         
+        self._addButton.clicked.connect(self.add)
+        self._clearButton.clicked.connect(self.clear_inputs)
+        
     def get_inputs(self) -> dict:
-        try:
-            probInput = int(self._probInput.getText())
-        except ValueError:
-            if not probInput:
-                probInput = 100
-            else:
-                print("prob needs to be a whole number")
-                probInput = 100 # DEV STUFF
+        if self._probInput.getText():
+            try:
+                probInput = int(self._probInput.getText())
+            except ValueError:
+                # JUST DEV STUFF RN
+                print("not a valid value dude")
+        else:
+            probInput = 100
                 
         return {
+            NICKNAME: self._nicknameInput.getText().lower(),
             KEY: self._keyInput.getText().lower(),
             PRESS: self._pressCmdInput.getText().lower(),
             HOLD: self._holdCmdInput.getText().lower(),
             PROBABILITY: probInput
         }
-
-    def load_inputs(self, inputs: dict) -> None:
-        self._keyInput.setText(inputs[KEY])
-        self._pressCmdInput.setText(inputs[PRESS])
-        self._holdCmdInput.setText(inputs[HOLD])
-        self._probInput.setText(str(inputs[PROBABILITY]))
     
     def clear_inputs(self) -> None:
-        self._keyInput.setText("")
-        self._pressCmdInput.setText("")
-        self._holdCmdInput.setText("")
-         
-class HorizontalCommandInputs(QFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
+        self._nicknameInput.clear()
+        self._keyInput.clear()
+        self._pressCmdInput.clear()
+        self._holdCmdInput.clear()
+        self._probInput.clear()
+
+    def add(self) -> None:
+        inputs = self.get_inputs()
+        self.signals.addCommand.emit({
+            inputs[NICKNAME]: {
+                KEY: inputs[KEY],
+                PRESS: inputs[PRESS],
+                HOLD: inputs[HOLD],
+                PROBABILITY: inputs[PROBABILITY]
+            }
+        })
         
-        mainLayout = NoPadHBoxLayout()
-        self.setLayout(mainLayout)
-        
-        self._nicknameInput = TitledLineEdit(title='Nickname', titlePlacement='top')
-        self._keyInput = TitledLineEdit(title='Key', titlePlacement='top')
-        self._pressInput = TitledLineEdit(title='Press Cmd', titlePlacement='top')
 
 class ComboButtonInputs(QFrame):
     def __init__(self):
@@ -272,11 +281,32 @@ class PresetManager(QFrame):
         mainLayout = NoPadVBoxLayout()
         self.setLayout(mainLayout)
         
+        self._presetDropdown = TitledDropdown(title='Preset', titlePlacement='top')
+        self._newButton = QPushButton(text='New')
+        self._deleteButton = QPushButton(text='Delete')
+        self._autosave = QCheckBox(text='Autosave')
+        
+        # Buttons
+        buttonLayout = NoPadHBoxLayout()
+        buttonLayout.addWidget(self._newButton)
+        buttonLayout.addSpacing(20)
+        buttonLayout.addWidget(self._deleteButton)
+        
+        mainLayout.addSpacing(50)
+        mainLayout.addWidget(self._presetDropdown)
+        mainLayout.addLayout(buttonLayout)
+        mainLayout.addWidget(self._autosave, alignment=const.gui.ALIGN_CENTER)
+
+    def get_preset(self) -> str:
+        return self._presetDropdown.getCurrentText()
+
+class BasicCommandsContainer(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        mainLayout = None
         
 
-   
-        
-        
         
         
         

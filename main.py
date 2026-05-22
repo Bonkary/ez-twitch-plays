@@ -4,7 +4,8 @@ from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget
 import widgets as wdgts
 from constants import *
 import sys
-
+from configurations import update_preset, add_new_preset
+from popups import PresetNamePrompt
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -46,11 +47,13 @@ class TwitchPlays(QWidget):
         inputsLayout = wdgts.NoPadHBoxLayout()
         
         self._singleInputs = wdgts.VerticalCommandInputs()
+        self._singleInputs.signals.addCommand.connect(self.add_command)
         self._comboInputs = wdgts.ComboButtonInputs()
+        self._presetManager = wdgts.PresetManager()
          
         inputsLayout.addSpacing(100)
         inputsLayout.addWidget(self._singleInputs)
-        inputsLayout.addStretch()
+        inputsLayout.addWidget(self._presetManager)
         inputsLayout.addWidget(self._comboInputs)
         inputsLayout.addSpacing(100)
         
@@ -58,7 +61,16 @@ class TwitchPlays(QWidget):
         mainLayout.addWidget(titleLabel)
         mainLayout.addLayout(inputsLayout)
         mainLayout.addStretch()
-        
+    
+    @Slot(dict)
+    def add_command(self, cmd: dict) -> None:
+        preset = self._presetManager.get_preset()
+        if not preset:
+            popup = PresetNamePrompt(command=cmd)
+            popup.exec()
+            
+    def add_preset(self, name: str) -> None:
+        pass
         
 
 

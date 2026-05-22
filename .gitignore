@@ -3,7 +3,7 @@ venv/
 .venv/
 .DS_Store
 misc.py
-configs/
+config/
 mapping.json
 old/
 .vscode/
