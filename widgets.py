@@ -88,7 +88,7 @@ class TitledLineEdit(QFrame):
         mainLayout.addSpacing(spacing)
         if titlePlacement == 'side':
             mainLayout.addStretch()
-        mainLayout.addWidget(self._entry, alignment=const.gui.ALIGN_RIGHT)
+        mainLayout.addWidget(self._entry, alignment=alignment)
         
     def getText(self) -> str:
         return self._entry.text().strip()
@@ -120,7 +120,7 @@ class NoPadVBoxLayout(QVBoxLayout):
 class InputSignals(QObject):
     addCommand = Signal(dict)
 
-class VerticalCommandInputs(QFrame):
+class SingleButtonInputs(QFrame):
     def __init__(self):
         super().__init__()
         self.signals = InputSignals()
@@ -273,7 +273,10 @@ class ComboButtonInputs(QFrame):
         mainLayout.addSpacing(20)
         mainLayout.addLayout(buttonLayout)
         mainLayout.addStretch()
-        
+
+    def clear_inputs(self) -> None:
+        print("Cleared combo inputs")
+     
 class PresetManager(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -299,6 +302,9 @@ class PresetManager(QFrame):
 
     def get_preset(self) -> str:
         return self._presetDropdown.getCurrentText()
+
+    def add_preset(self, name: str) -> None:
+        self._presetDropdown.addItem(name)
 
 class BasicCommandsContainer(QFrame):
     def __init__(self, parent=None):

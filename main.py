@@ -6,6 +6,7 @@ from constants import *
 import sys
 from configurations import update_preset, add_new_preset
 from popups import PresetNamePrompt
+from typing import Literal
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -46,7 +47,7 @@ class TwitchPlays(QWidget):
         
         inputsLayout = wdgts.NoPadHBoxLayout()
         
-        self._singleInputs = wdgts.VerticalCommandInputs()
+        self._singleInputs = wdgts.SingleButtonInputs()
         self._singleInputs.signals.addCommand.connect(self.add_command)
         self._comboInputs = wdgts.ComboButtonInputs()
         self._presetManager = wdgts.PresetManager()
@@ -67,10 +68,16 @@ class TwitchPlays(QWidget):
         preset = self._presetManager.get_preset()
         if not preset:
             popup = PresetNamePrompt(command=cmd)
+            popup.signals.addPreset.connect(self.add_preset)
             popup.exec()
-            
-    def add_preset(self, name: str) -> None:
-        pass
+    
+    @Slot(tuple)
+    def add_preset(self, preset: tuple) -> None:
+        self._presetManager.add_preset(preset[0])
+        if preset[1] == 'single':
+            self._singleInputs.clear_inputs()
+        else:
+            self._comboInputs.clear_inputs()
         
 
 

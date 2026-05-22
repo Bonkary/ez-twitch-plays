@@ -14,13 +14,12 @@ HOLD = 'hold'
 PROBABILITY = 'probability'
 NICKNAME = 'nickname'
 
-
 @dataclass
 class const:
     @dataclass
     class gui:
         MAIN_WINDOW_SIZE = QSize(1200,800)
-        DEFAULT_FONT_FAMILY = "Times"
+        DEFAULT_FONT_FAMILY = "Arial"
         DEFAULT_FONT = QFont(DEFAULT_FONT_FAMILY, pointSize=13)
         TITLE_FONT = QFont(DEFAULT_FONT_FAMILY, pointSize=20)
         
@@ -35,7 +34,7 @@ class const:
         TOP_TO_BOTTOM = QBoxLayout.Direction.TopToBottom
         BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
         
-        PROMPT_WINDOW_SIZE = QSize(400,200)
+        PROMPT_WINDOW_SIZE = QSize(300,120)
         
     @dataclass
     class colors:
