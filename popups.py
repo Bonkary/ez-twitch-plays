@@ -63,7 +63,7 @@ class Keymappings(QDialog):
         mainLayout.addLayout(mappingsLayout)
 
 class PresetSignals(QObject):
-    addPreset = Signal(tuple)
+    save = Signal(tuple)
 
 class PresetNamePrompt(QDialog):
     def __init__(self, command: dict, parent=None):
@@ -103,7 +103,7 @@ class PresetNamePrompt(QDialog):
     def save(self):
         name = self._presetName.getText()
         add_new_preset(name, self._command)
-        self.signals.addPreset.emit((name))
+        self.signals.save.emit(name)
         self.close()
 
 

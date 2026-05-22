@@ -15,7 +15,7 @@ def add_new_preset(preset_name: dict, cmd: dict = {}) -> None:
         file.write(json.dumps(PRESETS))
 
 def update_preset(*, current_preset: str, new_cmd: dict) -> None:
-    PRESETS[current_preset] = new_cmd
+    PRESETS[current_preset].append(new_cmd)
     with open(files.PRESETS, 'w') as file:
         file.write(json.dumps(PRESETS))
 

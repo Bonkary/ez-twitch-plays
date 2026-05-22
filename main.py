@@ -63,21 +63,17 @@ class TwitchPlays(QWidget):
         mainLayout.addLayout(inputsLayout)
         mainLayout.addStretch()
     
-    @Slot(dict)
-    def add_command(self, cmd: dict) -> None:
-        preset = self._presetManager.get_preset()
-        if not preset:
-            popup = PresetNamePrompt(command=cmd)
-            popup.signals.addPreset.connect(self.add_preset)
-            popup.exec()
+    def add_single_cmd(self, cmd: dict) -> None:
+        pass
     
-    @Slot(tuple)
+    def add_combo_cmd(self, cmd: dict) -> None:
+        pass
+    
+    def add_command(self, cmd: tuple) -> None:
+        pass
+    
     def add_preset(self, preset: tuple) -> None:
-        self._presetManager.add_preset(preset[0])
-        if preset[1] == 'single':
-            self._singleInputs.clear_inputs()
-        else:
-            self._comboInputs.clear_inputs()
+        pass
         
 
 

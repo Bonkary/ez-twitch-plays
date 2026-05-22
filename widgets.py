@@ -118,7 +118,8 @@ class NoPadVBoxLayout(QVBoxLayout):
 
 # Inputs
 class InputSignals(QObject):
-    addCommand = Signal(dict)
+    addSingleKey = Signal(tuple)
+    addComboKey = Signal()
 
 class SingleButtonInputs(QFrame):
     def __init__(self):
@@ -209,16 +210,17 @@ class SingleButtonInputs(QFrame):
         self._probInput.clear()
 
     def add(self) -> None:
+        # TODO: check for valid inputs
         inputs = self.get_inputs()
-        self.signals.addCommand.emit({
+        cmd = {
             inputs[NICKNAME]: {
                 KEY: inputs[KEY],
                 PRESS: inputs[PRESS],
                 HOLD: inputs[HOLD],
                 PROBABILITY: inputs[PROBABILITY]
             }
-        })
-        
+        }
+
 
 class ComboButtonInputs(QFrame):
     def __init__(self):
@@ -285,6 +287,9 @@ class PresetManager(QFrame):
         self.setLayout(mainLayout)
         
         self._presetDropdown = TitledDropdown(title='Preset', titlePlacement='top')
+        for name in PRESETS:
+            self._presetDropdown.addItem(name)
+        
         self._newButton = QPushButton(text='New')
         self._deleteButton = QPushButton(text='Delete')
         self._autosave = QCheckBox(text='Autosave')
