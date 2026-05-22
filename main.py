@@ -47,7 +47,7 @@ class TwitchPlays(QWidget):
         
         self._singleInputs = wdgts.VerticalCommandInputs()
         self._comboInputs = wdgts.ComboButtonInputs()
-        
+         
         inputsLayout.addSpacing(100)
         inputsLayout.addWidget(self._singleInputs)
         inputsLayout.addStretch()
