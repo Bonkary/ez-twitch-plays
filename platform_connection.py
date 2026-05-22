@@ -1,16 +1,8 @@
-import requests
-import sys
 import socket
 import re
 import random
 import time
-import os
-import json
-import concurrent.futures
-import traceback
-import queue
-from constants import *
-from threading import Event
+import constants as cnst
 
 # I started this using DougDoug's code, but now I think it's barely recognizable. 
 # I had to get it to work within seperate threads.

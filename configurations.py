@@ -1,7 +1,7 @@
 import os
 import json
 import sys
-from constants import *
+from old.constants import *
 
 # FILE OPERATIONS
 def write_empty_console_config_file() -> None:

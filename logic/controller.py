@@ -1,9 +1,10 @@
 import pydirectinput
 import time
-from constants import *
+from old.constants import *
 from platform_connection import *
 from PySide6.QtCore import QThread, QThreadPool, QRunnable, QObject
 from logic.controller import *
+from typing import Literal
 
 
 def hold_key(key: str, *, duration: int = keys.HOLD_KEY_DURATION) -> None:
@@ -58,12 +59,12 @@ def hold_combo_key(*, key_1: str, key_2: str, duration: int = keys.HOLD_KEY_DURA
 def left_click_mouse() -> None:
     pass
 
-def move_mouse(*, axis: str, distance: int, duration: int = 3) -> None:
+def move_mouse(*, axis: Literal['x', 'y', 'xy'], distance: int, duration: int = 3) -> None:
     '''
     Moves the mouse in the desired direction.
     
     Arguments:
-           axis - The axis you want the mouse to move on (x, y, xy)
+           axis - The axis you want the mouse to move on.
        distance - The amount you want to move the mouse.
        duration - How long you want it to take to get to the destination.
     '''

@@ -1,10 +1,11 @@
 import pydirectinput
 import time
-from constants import *
+from old.constants import *
 from platform_connection import *
 from PySide6.QtCore import QThread, QThreadPool, QRunnable, QObject, Slot, Signal
 import logic.controller as cntrls
 import random
+from typing import Literal
 
 THREAD_POOL = QThreadPool.globalInstance()
 EXEC_THREAD = QThread()
@@ -72,7 +73,7 @@ class WorkerSignals(QObject):
     execute = Signal()
 
 class Execute(QRunnable):
-    def __init__(self, key: str | tuple, cmdType: str):
+    def __init__(self, key: str | tuple, cmdType: Literal['press', 'hold']):
         super().__init__()
         self._key = key
         self._cmdType = cmdType

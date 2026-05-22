@@ -1,34 +1,34 @@
 import sys
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit
-from PySide6.QtGui import QPalette
+from PySide6.QtCore import Qt, Slot, Signal
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton
+from PySide6.QtGui import QPalette, QFont
 from constants import *
-
+from typing import Literal, Any
 
 class NamedDropdown(QFrame):
-    def __init__(self, *, title: str, titlePlacement: str, titleFont: QFont = gui.DEFAULT_FONT):
+    def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], titleFont: QFont = const.gui.DEFAULT_FONT):
         super().__init__()
         self.setMinimumHeight(0)
         match titlePlacement:
             case 'top':
                 mainLayout = NoPadVBoxLayout()
-                mainLayout.setDirection(gui.TOP_TO_BOTTOM)
+                mainLayout.setDirection(const.gui.TOP_TO_BOTTOM)
             case 'side':
                 mainLayout = NoPadHBoxLayout()
-                mainLayout.setDirection(gui.LEFT_TO_RIGHT)
+                mainLayout.setDirection(const.gui.LEFT_TO_RIGHT)
             case _: 
                 raise ValueError(f"{titlePlacement} is not a valid value (must be 'top' or 'side')")
         self.setLayout(mainLayout)
         
         titleLabel = QLabel(text=title)
-        titleLabel.setFont(gui.DEFAULT_FONT)
+        titleLabel.setFont(const.gui.DEFAULT_FONT)
         titleLabel.setContentsMargins(0,0,0,0)
         
         self._dropdown = QComboBox()
         self._dropdown.setFixedWidth(200)
         self._dropdown.setContentsMargins(0,0,0,0)
         
-        mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addWidget(self._dropdown)
         
     def addItem(self, item: str) -> None:
@@ -44,27 +44,27 @@ class NamedDropdown(QFrame):
         self._dropdown.setPlaceholderText(text)
             
 class NamedLineEdit(QFrame):
-    def __init__(self, name: str, namePlacement: str, titleFont: QFont = gui.DEFAULT_FONT, width: int = 100):
+    def __init__(self, name: str, namePlacement: Literal['top', 'side'], titleFont: QFont = const.gui.DEFAULT_FONT, width: int = 100):
         super().__init__()
         match namePlacement:
             case 'top':
                 mainLayout = NoPadVBoxLayout()
-                mainLayout.setDirection(gui.TOP_TO_BOTTOM)
-                alignment = gui.ALIGN_CENTER
+                mainLayout.setDirection(const.gui.TOP_TO_BOTTOM)
+                alignment = const.gui.ALIGN_CENTER
             case 'side':
                 mainLayout = NoPadHBoxLayout()
-                mainLayout.setDirection(gui.LEFT_TO_RIGHT)
-                alignment = gui.ALIGN_RIGHT
+                mainLayout.setDirection(const.gui.LEFT_TO_RIGHT)
+                alignment = const.gui.ALIGN_LEFT
             case _: 
                 raise ValueError(f"{namePlacement} is not a valid value (must be 'top' or 'side')")
         self.setLayout(mainLayout)
         
         titleLabel = QLabel(text=name)
-        titleLabel.setFont(gui.DEFAULT_FONT)
+        titleLabel.setFont(const.gui.DEFAULT_FONT)
         
         self.entry = QLineEdit()
         self.entry.setFixedWidth(width)
-        self.entry.setFont(gui.DEFAULT_FONT)
+        self.entry.setFont(const.gui.DEFAULT_FONT)
         
         mainLayout.addWidget(titleLabel, alignment=alignment)
         mainLayout.addSpacing(7)
@@ -80,7 +80,7 @@ class NoPadHBoxLayout(QHBoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        self.setAlignment(gui.ALIGN_TOP|gui.ALIGN_CENTER)
+        self.setAlignment(const.gui.ALIGN_TOP|const.gui.ALIGN_CENTER)
         self.setContentsMargins(0,0,0,0)
         self.setSpacing(0)
         
@@ -88,60 +88,52 @@ class NoPadVBoxLayout(QVBoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        self.setAlignment(gui.ALIGN_TOP|gui.ALIGN_CENTER)
+        self.setAlignment(const.gui.ALIGN_TOP|const.gui.ALIGN_CENTER)
         self.setContentsMargins(0,0,0,0)
         self.setSpacing(0)
-        
-class KeyboardButtonInputs(QFrame):
+
+class VerticalCommandInputs(QFrame):
     def __init__(self, *, name: str):
         super().__init__()
-        self.setFrameStyle(QFrame.Box | QFrame.Plain)
-        self.setLineWidth(1)
         
-        # BORDER COLOR
-        self.setAutoFillBackground(True)
-        borderColor = self.palette()
-        borderColor.setColor(QPalette.WindowText, colors.DARK_PURPLE)
-        self.setPalette(borderColor)
-        
-        equalMargin = 8
+        margin = 8
         rootLayout = NoPadVBoxLayout()
-        rootLayout.setContentsMargins(equalMargin,equalMargin,equalMargin,equalMargin)
+        rootLayout.setContentsMargins(margin,margin,margin,margin)
         self.setLayout(rootLayout)
         
         # ACTUAL WIDGET STARTS HERE
-        mainFrame = QFrame()
-        mainTextColor = mainFrame.palette()
-        mainTextColor.setColor(QPalette.WindowText, colors.WHITE)
-        mainFrame.setPalette(mainTextColor)
+        mainFrame = QFrame() # idk why i put a frame in a frame, but i dont wanna fix it right now. maybe later.
         
         mainLayout = NoPadVBoxLayout()
         mainFrame.setLayout(mainLayout)
         
         titleFont = QFont()
         titleFont.setUnderline(True)
-        titleFont.setPixelSize(gui.DEFAULT_FONT.pixelSize()+3)
+        titleFont.setPointSize(const.gui.DEFAULT_FONT.pointSize()+5)
         title = QLabel(text=name)
-        title.setAlignment(gui.ALIGN_CENTER)
+        title.setAlignment(const.gui.ALIGN_CENTER)
         title.setFont(titleFont)
         
-        
+        self._buttonInput = NamedLineEdit(name="Button", namePlacement='side')
         self._keyboardInput = NamedLineEdit(name="Keyboard", namePlacement='side')
         self._pressCmdInput = NamedLineEdit(name="Press Command", namePlacement='side')
         self._holdCmdInput = NamedLineEdit(name="Hold Command", namePlacement='side')
         self._probInput = NamedLineEdit(name="Probability (0-100)", namePlacement='side')
         
+        spacing = 10
         mainLayout.addWidget(title)
-        mainLayout.addSpacing(15)
+        mainLayout.addSpacing(30)
+        mainLayout.addWidget(self._buttonInput)
+        mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._keyboardInput)
-        mainLayout.addSpacing(10)
+        mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._pressCmdInput)
-        mainLayout.addSpacing(10)
+        mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._holdCmdInput)
-        mainLayout.addSpacing(10)
+        mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._probInput)
         
-        rootLayout.addWidget(mainFrame, alignment=gui.ALIGN_CENTER)
+        rootLayout.addWidget(mainFrame, alignment=const.gui.ALIGN_CENTER)
         rootLayout.addStretch(True)
         
     def get_inputs(self) -> dict:
@@ -172,7 +164,33 @@ class KeyboardButtonInputs(QFrame):
         self._pressCmdInput.setText("")
         self._holdCmdInput.setText("")
          
+class HorizontalCommandInputs(QFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+        mainLayout = NoPadHBoxLayout()
+        self.setLayout(mainLayout)
+        
+        self._nicknameInput = NamedLineEdit(name='Nickname', namePlacement='top')
+        self._keyInput = NamedLineEdit(name='Key', namePlacement='top')
+        self._pressInput = NamedLineEdit(name='Press Cmd', namePlacement='top')
 
+
+
+
+class ComboButtonInputs(QFrame):
+    def __init__(self, *, configManager=None):
+        super().__init__()
+
+        mainLayout = NoPadVBoxLayout()
+        self.setLayout(mainLayout)
+        
+        
+
+
+   
+        
+        
         
         
         

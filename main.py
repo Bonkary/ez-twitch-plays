@@ -1,206 +1,81 @@
-import sys
-import threading
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt, Slot, Signal, QThread, QThreadPool
-from PySide6.QtWidgets import *
-from constants import *
+from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget
 import widgets as wdgts
-import popups as popups
-from consoles import ConsoleContainer
-from configurations import *
-from platform_connection import *
-from logic.thread_objects import EXEC_THREAD, KeypressExecutor
+from constants import *
+import sys
 
-#TODO: it fuckin wipes your inputs when you didnt put in a preset name then click "new"
-class TwitchPlays(QWidget):
+
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self._executor = KeypressExecutor()
-        self._executor.moveToThread(EXEC_THREAD)
-        EXEC_THREAD.started.connect(self._executor.run)
-        
-        ## UI ##
-        self.setFixedSize(gui.MAIN_WINDOW_WIDTH, gui.MAIN_WINDOW_HEIGHT)
+
+        self.setFixedSize(const.gui.MAIN_WINDOW_SIZE)
         self.setWindowTitle("Ez Twitch Plays")
         
         self.setAutoFillBackground(True)
         bg = self.palette()
-        bg.setColor(self.backgroundRole(), colors.TWITCH_PURPLE)
+        bg.setColor(self.backgroundRole(), const.colors.TWITCH_PURPLE)
         self.setPalette(bg)
+        
+        rootLayout = wdgts.NoPadHBoxLayout()
+        self.setLayout(rootLayout)
+        
+        twitchPlays = TwitchPlays()
+        
+        rootLayout.addWidget(twitchPlays)
+        self.setCentralWidget(twitchPlays)
+        
 
+class TwitchPlays(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setAutoFillBackground(True)
+        bg = self.palette()
+        bg.setColor(self.backgroundRole(), const.colors.TWITCH_PURPLE)
+        self.setPalette(bg)
+        
         mainLayout = wdgts.NoPadVBoxLayout()
-
-        # Header
-        header = Header()
-        
-        consoleDropdown = QComboBox()
-        for console in AVAILABLE_CONSOLES:
-            consoleDropdown.addItem(console)
-        consoleDropdown.setPlaceholderText("Select Console")
-        consoleDropdown.setCurrentIndex(-1)
-        
-        # Console Container
-        self.consoleContainer = ConsoleContainer()
-        
-        # Footer
-        self._footer = Footer(app=self)
-
-        # Main Layout
-        mainLayout.addSpacing(15)
-        mainLayout.addWidget(header)
-        mainLayout.addSpacing(20)
-        mainLayout.addWidget(consoleDropdown, alignment=gui.ALIGN_CENTER)
-        mainLayout.addSpacing(20)
-        mainLayout.addWidget(self.consoleContainer, alignment=gui.ALIGN_LEFT)
-        mainLayout.addSpacing(20)
-        mainLayout.addWidget(self._footer)
-        
+        mainLayout.setAlignment(const.gui.ALIGN_CENTER)
         self.setLayout(mainLayout)
         
-        consoleDropdown.currentTextChanged.connect(self.consoleContainer.change_console)
-    
-    @Slot()
-    def start_playing(self) -> None:
-        self._footer.playButtonContainer.setCurrentIndex(STOP_PLAYING_BUTTON_INDEX)
-        preset = self.consoleContainer.get_preset()
-        self._executor.set_preset(preset)
+        titleLabel = QLabel("Ez Twitch Plays", alignment=const.gui.ALIGN_CENTER)
+        titleLabel.setFont(const.gui.TITLE_FONT)
         
-        if not TWITCH_MANAGER.is_connected():
-            TWITCH_MANAGER.connect(channel_name=SETTINGS[TWITCH_CHANNEL])
+        self._dropdown = wdgts.NamedDropdown(title="Console", titlePlacement='top')
         
-        if not EXEC_THREAD.isRunning():
-            EXEC_THREAD.start()
-        else:
-            self._executor.resume()
+        inputsLayout = wdgts.NoPadVBoxLayout()
         
-    @Slot()
-    def stop_playing(self) -> None:
-        self._footer.playButtonContainer.setCurrentIndex(START_PLAYING_BUTTON_INDEX)
-        self._executor.pause()
-    
-    def exit(self) -> None:
-        self._executor.pause()
-        self._executor.kill()
-        time.sleep(2) # Let the thread finish? I hate threads.
-        EXEC_THREAD.terminate()
-
-class Header(QFrame):
-    def __init__(self):
-        super().__init__()
-        self.keyMappingsPopup = popups.Keymappings(self)
+        self._singleInputs = wdgts.VerticalCommandInputs(name="New Command")
+        self._comboInputs = wdgts.ComboButtonInputs()
         
-        mainLayout = QHBoxLayout()
-        mainLayout.setAlignment(gui.ALIGN_CENTER)
-        mainLayout.setContentsMargins(0,0,0,0)
-        mainLayout.setSpacing(0)
-    
-        # Input
-        twitchInputContainer = wdgts.NoPadHBoxLayout()
+        inputsLayout.addStretch()
+        inputsLayout.addWidget(self._singleInputs)
+        inputsLayout.addWidget(self._comboInputs)
+        inputsLayout.addStretch()
         
-        # Channel Label
-        twitchLabel = QLabel("Twitch Channel:")
-        twitchLabel.setFont(gui.DEFAULT_FONT)
-        
-        # Channel Input
-        self._twitchInput = QLineEdit()
-        
-        # Save Button
-        self._saveButton = QPushButton(text="Save")
-        
-        twitchInputContainer.addWidget(twitchLabel)
-        twitchInputContainer.addSpacing(10)
-        twitchInputContainer.addWidget(self._twitchInput)
-        twitchInputContainer.addSpacing(10)
-        twitchInputContainer.addWidget(self._saveButton)
-        
-        # Title
-        titleFont = QFont()
-        titleFont.setWeight(QFont.Weight.Bold)
-        titleFont.setPixelSize(20)
-        titleLabel = QLabel("Ez Twitch Plays")
-        titleLabel.setFont(titleFont)
-        
-        # Buttons
-        buttonContainer = QHBoxLayout()
-        buttonContainer.setAlignment(gui.ALIGN_CENTER)
-        buttonContainer.setContentsMargins(0,0,0,0)
-        buttonContainer.setSpacing(0)
-        
-        tutorialButton = QPushButton(text="Tutorial")
-        tutorialButton.setFont(gui.DEFAULT_FONT)
-        
-        keymappingsButton = QPushButton(text="See Keymappings")
-        keymappingsButton.setFont(gui.DEFAULT_FONT)
-        keymappingsButton.clicked.connect(self.open_keymappings)
-        
-        buttonContainer.addWidget(tutorialButton)
-        buttonContainer.addSpacing(20)
-        buttonContainer.addWidget(keymappingsButton)
-        
-        mainLayout.addSpacing(50)
-        mainLayout.addLayout(twitchInputContainer)
-        mainLayout.addSpacing(320)
-        mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
-        mainLayout.addSpacing(300)
-        mainLayout.addLayout(buttonContainer)
-        mainLayout.addSpacing(50)
-        mainLayout.addStretch(True)
-        
-        self.setLayout(mainLayout)
-        
-        if SETTINGS[TWITCH_CHANNEL]:
-            self._twitchInput.setText(SETTINGS[TWITCH_CHANNEL])
-            self._saveButton.setDisabled(True)
-        
-        self._saveButton.clicked.connect(self.save_twitch_channel)
-        self._twitchInput.textChanged.connect(lambda: self._saveButton.setEnabled(True))
-        
-    @Slot()
-    def save_twitch_channel(self) -> None:
-        channel = self._twitchInput.text().strip()
-        if channel:
-            SETTINGS[TWITCH_CHANNEL] = channel
-            update_settings_file()
-            self._saveButton.setDisabled(True)
-
-    @Slot()
-    def open_keymappings(self):
-        if not self.keyMappingsPopup.isVisible():
-            self.keyMappingsPopup.show()
-        else:
-            return
-
-class Footer(QFrame):
-    def __init__(self, app: TwitchPlays):
-        super().__init__()
-        
-        mainLayout = wdgts.NoPadHBoxLayout()
-        self.setLayout(mainLayout)
-        
-        self.playButtonContainer = QStackedLayout()
-        self.playButtonContainer.setAlignment(gui.ALIGN_CENTER)
-        self.playButtonContainer.setContentsMargins(0,0,0,0)
-        self.playButtonContainer.setSpacing(0)
-        
-        startButton = QPushButton("Start Playing")
-        startButton.setFixedSize(500,50)
-        
-        stopButton = QPushButton("Stop Playing")
-        stopButton.setFixedSize(500,50)
-        
-        self.playButtonContainer.insertWidget(START_PLAYING_BUTTON_INDEX, startButton)
-        self.playButtonContainer.insertWidget(STOP_PLAYING_BUTTON_INDEX, stopButton)
-        
-        mainLayout.addStretch()
-        mainLayout.addLayout(self.playButtonContainer)
+        mainLayout.addSpacing(20)
+        mainLayout.addWidget(titleLabel)
+        mainLayout.addSpacing(200)
+        mainLayout.addLayout(inputsLayout)
         mainLayout.addStretch()
         
-        startButton.clicked.connect(app.start_playing)
-        stopButton.clicked.connect(app.stop_playing)
+        
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = TwitchPlays()
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    app = QApplication([])
+    
+    window = MainWindow()
     window.show()
-    app.aboutToQuit.connect(window.exit)
+    
+    
     sys.exit(app.exec())

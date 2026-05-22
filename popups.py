@@ -2,7 +2,7 @@ import sys
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import *
-from constants import *
+from old.constants import *
 import widgets as wdgts
 
 class Keymappings(QDialog):
@@ -59,8 +59,7 @@ class Keymappings(QDialog):
         mappingsLayout.addLayout(col2)
         
         mainLayout.addLayout(mappingsLayout)
-        
-       
+    
 class ButtonCombosConfig(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -150,4 +149,9 @@ class ButtonComboInputs(QFrame):
             'press': press,
             'hold': hold
         })
-        
+
+
+
+
+
+       
