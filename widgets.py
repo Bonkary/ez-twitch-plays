@@ -1,11 +1,15 @@
 import sys
 from PySide6.QtCore import Qt, Slot, Signal, QObject
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout, QFileDialog
 from PySide6.QtGui import QPalette, QFont
 from constants import *
 from typing import Literal, Any
-from configurations import PRESETS
+from configurations import PRESETS, SETTINGS
 import configurations as cfg
+import shutil
+import json
+import subprocess
+import popups
 
 # General
 class TitledDropdown(QFrame):
@@ -234,7 +238,6 @@ class SingleButtonInputs(QFrame):
         
         self.clear_inputs()
             
-
 class ComboButtonInputs(QFrame):
     def __init__(self, preset_manager: PresetManager, parent=None):
         super().__init__(parent)
@@ -346,7 +349,7 @@ class ComboButtonInputs(QFrame):
         
         self.clear_inputs()
             
-    
+# Managers
 class PresetManager(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -384,6 +387,7 @@ class PresetManager(QFrame):
         mainLayout.addLayout(importLayout)
         
         self._newButton.clicked.connect(self.new_preset)
+        self._exportButton.clicked.connect(self.export)
 
     def get_preset(self) -> str:
         return self._presetDropdown.getCurrentText().strip()
@@ -397,7 +401,24 @@ class PresetManager(QFrame):
         if name and ok:
             cfg.create_preset(preset_name=name)
             self.add_preset(name)
+            
+    def import_presets(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(self, "Select Preset file", "", "JSON files (*.json)")
+        if path:
+            with open(path, 'r') as file:
+                newPresets = json.loads(file.read())
+            
+            presetList = []
+            for preset in newPresets:
+                presetList.append(newPresets[preset])
+                self._presetDropdown.addItem(preset)
+            cfg.add_imports(presetList)
+            
+    def export(self) -> None:
+        popup = popups.Export()
+        popup.exec()
 
+# Containers
 class SingleCommand(QFrame):
     def __init__(self, active_preset: str, nickname: str, parent=None):
         super().__init__(parent)
@@ -408,9 +429,6 @@ class SingleCommand(QFrame):
         cmd = PRESETS[active_preset][nickname]
         nicknameLabel = QLabel(cmd[nickname])
         nicknameLabel.setFont(QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=20))
-        
-        
-        
 
 class SingleCommandContainer(QFrame):
     def __init__(self, parent=None):

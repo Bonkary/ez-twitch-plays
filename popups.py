@@ -1,66 +1,88 @@
 import sys
 from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt, Slot, Signal, QObject
+from PySide6.QtCore import Qt, Slot, Signal, QObject, QMargins
 from PySide6.QtWidgets import *
 from constants import *
 import widgets as wdgts
-from configurations import create_preset
+from configurations import PRESETS, SETTINGS
 from typing import Literal
+import json
 
-class Keymappings(QDialog):
-    def __init__(self, parent):
+class Export(QDialog):
+    def __init__(self, parent=None):
         super().__init__(parent)
+        self._checkboxes: list[QCheckBox] = []
         
-        self.resize(gui.KEYMAP_WINDOW_WIDTH, gui.KEYMAP_WINDOW_HEIGHT)
+        self.setFixedSize(const.gui.EXPORT_WINDOW_SIZE)
         
-        self.setAutoFillBackground(True)
-        bg = self.palette()
-        bg.setColor(self.backgroundRole(), '#353836')
-        self.setPalette(bg)
-
         mainLayout = wdgts.NoPadVBoxLayout()
+        mainLayout.setAlignment(const.gui.ALIGN_CENTER)
         self.setLayout(mainLayout)
+
+        title = QLabel("Export")
+        title.setFont(QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=20))
         
-        # Title
-        titleFont = QFont()
-        titleFont.setWeight(QFont.Weight.Bold)
-        titleFont.setPixelSize(40)
-        title = QLabel("Keymappings")
-        title.setStyleSheet(f"color: white")
-        title.setFont(titleFont)
+        # Preset Layout
+        margin = 20
+        selectFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
+        selectFont.setUnderline(True)
+        selectTitle = QLabel("Select presets")
+        selectTitle.setFont(selectFont)
+        presetsLayout = QGridLayout()
+        presetsLayout.setSpacing(10)
+        nextRow = 0
+        nextCol = 0
+        for preset in PRESETS:
+            checkbox = QCheckBox(text=preset)
+            checkbox.setFont(const.gui.DEFAULT_FONT)
+            self._checkboxes.append(checkbox)
+            presetsLayout.addWidget(checkbox, nextRow, nextCol)
+            if nextCol == 3:
+                nextCol += 1
+                nextRow = 0
+            else:
+                nextCol += 1
         
-        mainLayout.addSpacing(40)
-        mainLayout.addWidget(title, alignment=gui.ALIGN_CENTER)
-        mainLayout.addSpacing(50)
+        selectAllCheckbox = QCheckBox("Select all")
+        selectAllCheckbox.setFont(const.gui.DEFAULT_FONT)
+        clipboardCheckbox = QCheckBox("Copy file to clipboard")
+        clipboardCheckbox.setFont(const.gui.DEFAULT_FONT)
+        exportButton = QPushButton("Export")
+        exportButton.setStyleSheet("font-size: 15px;")
         
-        # Mappings
-        mappingsLayout = wdgts.NoPadHBoxLayout()
-        mappingsLayout.setAlignment(gui.ALIGN_CENTER)
-        col1 = wdgts.NoPadVBoxLayout()
-        col2 = wdgts.NoPadVBoxLayout()
-        mapFont = QFont()
-        mapFont.setPixelSize(20)
+        mainLayout.addSpacing(20)
+        mainLayout.addWidget(title, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(20)
+        mainLayout.addWidget(selectTitle, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(5)
+        mainLayout.addLayout(presetsLayout)
+        mainLayout.addSpacing(10)
+        mainLayout.addWidget(selectAllCheckbox, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(30)
+        mainLayout.addWidget(clipboardCheckbox, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(20)
+        mainLayout.addWidget(exportButton)
+        mainLayout.addStretch()
         
-        # Left Col
-        colCount = len(keys.USER_FRIENDLY_KEYBOARD_MAPPINGS) // 2
-        for key in keys.USER_FRIENDLY_KEYBOARD_MAPPINGS[:colCount]:
-            newMapping = QLabel(key)
-            newMapping.setFont(mapFont)
-            col1.addWidget(newMapping)
-            col1.addSpacing(20)
+        exportButton.clicked.connect(self.export)
+    
+    def export(self) -> None:
+        toExport = []
+        for checkbox in self._checkboxes:
+            isChecked = checkbox.checkState()
+            if isChecked == Qt.CheckState.Checked:
+                toExport.append(checkbox.text())
         
-        # Right Col
-        for key in keys.USER_FRIENDLY_KEYBOARD_MAPPINGS[colCount:]:
-            newMapping = QLabel(key)
-            newMapping.setFont(mapFont)
-            col2.addWidget(newMapping)
-            col2.addSpacing(20)
+        presetExports = {}
+        for preset in toExport:
+            presetExports.update({preset: PRESETS[preset]})
+        
+        exportPath = os.path.join(dirs.DOWNLOADS, 'preset_export.json')
+        with open(exportPath, 'w') as file:
+            file.write(json.dumps(presetExports))
             
-        mappingsLayout.addLayout(col1)
-        mappingsLayout.addSpacing(200)
-        mappingsLayout.addLayout(col2)
-        
-        mainLayout.addLayout(mappingsLayout)
+        self.close()
+            
 
 
 

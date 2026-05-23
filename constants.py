@@ -17,6 +17,7 @@ PROBABILITY = 'probability'
 NICKNAME = 'nickname'
 SINGLE = 'single'
 COMBO = 'combo'
+EXPORT = 'export'
 
 @dataclass
 class const:
@@ -38,7 +39,7 @@ class const:
         TOP_TO_BOTTOM = QBoxLayout.Direction.TopToBottom
         BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
         
-        PROMPT_WINDOW_SIZE = QSize(300,120)
+        EXPORT_WINDOW_SIZE = QSize(300,400)
         
     @dataclass
     class colors:
@@ -55,6 +56,7 @@ class dirs:
     ROOT = Path(__file__).resolve().parent
     CONFIG = os.path.join(ROOT, 'config')
     TEMP = os.path.join(ROOT, 'temp')
+    DOWNLOADS = str(Path.home() / "Downloads")
 
 @dataclass
 class files:
