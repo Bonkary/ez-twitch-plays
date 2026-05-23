@@ -1,10 +1,11 @@
 import sys
 from PySide6.QtCore import Qt, Slot, Signal, QObject
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout
 from PySide6.QtGui import QPalette, QFont
 from constants import *
 from typing import Literal, Any
-from configurations import PRESETS, update_preset
+from configurations import PRESETS
+import configurations as cfg
 
 # General
 class TitledDropdown(QFrame):
@@ -43,7 +44,7 @@ class TitledDropdown(QFrame):
         self._dropdown.setCurrentIndex(index)
         
     def getCurrentText(self) -> str:
-        return self._dropdown.currentText()
+        return self._dropdown.currentText().strip()
         
     def setPlaceholderText(self, text: str|int) -> None:
         self._dropdown.setPlaceholderText(text)
@@ -118,13 +119,13 @@ class NoPadVBoxLayout(QVBoxLayout):
 
 # Inputs
 class InputSignals(QObject):
-    addSingleKey = Signal(tuple)
-    addComboKey = Signal()
+    add = Signal(str)
 
 class SingleButtonInputs(QFrame):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, preset_manager: PresetManager, parent=None):
+        super().__init__(parent)
         self.signals = InputSignals()
+        self._presetManager = preset_manager
         
         margin = 8
         rootLayout = NoPadHBoxLayout()
@@ -187,19 +188,20 @@ class SingleButtonInputs(QFrame):
     def get_inputs(self) -> dict:
         if self._probInput.getText():
             try:
-                probInput = int(self._probInput.getText())
+                prob = int(self._probInput.getText())
             except ValueError:
                 # JUST DEV STUFF RN
                 print("not a valid value dude")
+                prob = 0
         else:
-            probInput = 100
+            prob = 100
                 
         return {
             NICKNAME: self._nicknameInput.getText().lower(),
             KEY: self._keyInput.getText().lower(),
             PRESS: self._pressCmdInput.getText().lower(),
             HOLD: self._holdCmdInput.getText().lower(),
-            PROBABILITY: probInput
+            PROBABILITY: prob
         }
     
     def clear_inputs(self) -> None:
@@ -220,14 +222,27 @@ class SingleButtonInputs(QFrame):
                 PROBABILITY: inputs[PROBABILITY]
             }
         }
-
+        
+        presetName = self._presetManager.get_preset()
+        if not presetName:
+            name, ok = QInputDialog.getText(self, "New Preset Name",'Give preset name. If not, no save.', QLineEdit.Normal, "")
+            if ok and name:
+                cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=SINGLE)
+                self._presetManager.add_preset(name)
+        else:
+            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=SINGLE)
+        
+        self.clear_inputs()
+            
 
 class ComboButtonInputs(QFrame):
-    def __init__(self):
-        super().__init__()
-
+    def __init__(self, preset_manager: PresetManager, parent=None):
+        super().__init__(parent)
+        self._presetManager = preset_manager
         mainLayout = NoPadVBoxLayout()
         self.setLayout(mainLayout)
+        
+        self.signals = InputSignals()
         
         titleFont = QFont()
         titleFont.setPointSize(const.gui.DEFAULT_FONT.pointSize()+5)
@@ -275,10 +290,63 @@ class ComboButtonInputs(QFrame):
         mainLayout.addSpacing(20)
         mainLayout.addLayout(buttonLayout)
         mainLayout.addStretch()
+        
+        self._clearButton.clicked.connect(self.clear_inputs)
+        self._addButton.clicked.connect(self.add)
 
     def clear_inputs(self) -> None:
-        print("Cleared combo inputs")
-     
+        self._nicknameInput.clear()
+        self._key1Input.clear()
+        self._key2Input.clear()
+        self._pressInput.clear()
+        self._holdInput.clear()
+        self._probInput.clear()
+    
+    def get_inputs(self) -> dict:
+        prob = self._probInput.getText()
+        if prob:
+            try:
+                prob = int(prob)
+            except ValueError:
+                # DEV STUFF RN
+                print("not a valid value dummy")
+                prob = 0
+        else:
+            prob = 100
+            
+        return {
+            NICKNAME: self._nicknameInput.getText().lower(),
+            KEY1: self._key1Input.getText().lower(),
+            KEY2: self._key2Input.getText().lower(),
+            PRESS: self._pressInput.getText().lower(),
+            HOLD: self._holdInput.getText().lower(),
+            PROBABILITY: prob
+        }
+    
+    def add(self) -> None:
+        inputs = self.get_inputs()
+        cmd = {
+            inputs[NICKNAME]: {
+                KEY1: inputs[KEY1],
+                KEY2: inputs[KEY2],
+                PRESS: inputs[PRESS],
+                HOLD: inputs[HOLD],
+                PROBABILITY: inputs[PROBABILITY]
+            }
+        }
+        
+        presetName = self._presetManager.get_preset()
+        if not presetName:
+            name, ok = QInputDialog.getText(self, "New Preset Name",'Give preset name. If not, no save.', QLineEdit.Normal, "")
+            if ok and name:
+                cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=COMBO)
+                self._presetManager.add_preset(name)
+        else:
+            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=COMBO)
+        
+        self.clear_inputs()
+            
+    
 class PresetManager(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -293,30 +361,74 @@ class PresetManager(QFrame):
         self._newButton = QPushButton(text='New')
         self._deleteButton = QPushButton(text='Delete')
         self._autosave = QCheckBox(text='Autosave')
+        self._importButton = QPushButton(text='Import')
+        self._exportButton = QPushButton(text='Export')
         
-        # Buttons
+        # New/Delete Layout
         buttonLayout = NoPadHBoxLayout()
         buttonLayout.addWidget(self._newButton)
         buttonLayout.addSpacing(20)
         buttonLayout.addWidget(self._deleteButton)
         
+        # Import/Export Layout
+        importLayout = NoPadVBoxLayout()
+        importLayout.addWidget(self._importButton)
+        importLayout.addSpacing(5)
+        importLayout.addWidget(self._exportButton)
+        
+        # Main Layout
         mainLayout.addSpacing(50)
         mainLayout.addWidget(self._presetDropdown)
         mainLayout.addLayout(buttonLayout)
-        mainLayout.addWidget(self._autosave, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(5)
+        mainLayout.addLayout(importLayout)
+        
+        self._newButton.clicked.connect(self.new_preset)
 
     def get_preset(self) -> str:
-        return self._presetDropdown.getCurrentText()
+        return self._presetDropdown.getCurrentText().strip()
 
     def add_preset(self, name: str) -> None:
         self._presetDropdown.addItem(name)
+        self._presetDropdown.setCurrentText(name)
+        
+    def new_preset(self) -> None:
+        name, ok = QInputDialog.getText(self, "New Preset Name", "Give name for preset.", QLineEdit.Normal, "")
+        if name and ok:
+            cfg.create_preset(preset_name=name)
+            self.add_preset(name)
 
-class BasicCommandsContainer(QFrame):
+class SingleCommand(QFrame):
+    def __init__(self, active_preset: str, nickname: str, parent=None):
+        super().__init__(parent)
+        
+        mainLayout = QVBoxLayout()
+        self.setLayout(mainLayout)
+        
+        cmd = PRESETS[active_preset][nickname]
+        nicknameLabel = QLabel(cmd[nickname])
+        nicknameLabel.setFont(QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=20))
+        
+        
+        
+
+class SingleCommandContainer(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        mainLayout = None
+        self._nextRow = 0
+        self._nextColumn = 0
+        self._wdigetCache = []
         
+        margin = 10
+        self._mainLayout = QGridLayout()
+        self._mainLayout.setContentsMargins(margin, margin, margin, margin)
+        self.setLayout(self._mainLayout)
+        
+    def add(self, cmd) -> None:
+        
+        
+
 
         
         

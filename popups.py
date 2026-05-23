@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, Slot, Signal, QObject
 from PySide6.QtWidgets import *
 from constants import *
 import widgets as wdgts
-from configurations import add_new_preset
+from configurations import create_preset
 from typing import Literal
 
 class Keymappings(QDialog):
@@ -61,50 +61,6 @@ class Keymappings(QDialog):
         mappingsLayout.addLayout(col2)
         
         mainLayout.addLayout(mappingsLayout)
-
-class PresetSignals(QObject):
-    save = Signal(tuple)
-
-class PresetNamePrompt(QDialog):
-    def __init__(self, command: dict, parent=None):
-        super().__init__(parent)
-        self._command = command
-        self.signals = PresetSignals()
-        
-        self.setAutoFillBackground(True)
-        bg = self.palette()
-        bg.setColor(self.backgroundRole(), '#353836')
-        self.setPalette(bg)
-        
-        self.setFixedSize(const.gui.PROMPT_WINDOW_SIZE)
-
-        mainLayout = wdgts.NoPadVBoxLayout()
-        self.setLayout(mainLayout)
-        
-        promptFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
-        self._presetName = wdgts.TitledLineEdit(title="I need a preset name.", titlePlacement='top', titleAlignment='center', titleFont=promptFont, width=200)
-        saveButton = QPushButton("Save")
-        cancelButton = QPushButton("Cancel")
-        
-        buttonLayout = wdgts.NoPadHBoxLayout()
-        buttonLayout.addWidget(saveButton)
-        buttonLayout.addSpacing(20)
-        buttonLayout.addWidget(cancelButton)
-        
-        mainLayout.addStretch()
-        mainLayout.addWidget(self._presetName)
-        mainLayout.addSpacing(10)
-        mainLayout.addLayout(buttonLayout)
-        mainLayout.addStretch()
-        
-        saveButton.clicked.connect(self.save)
-        cancelButton.clicked.connect(self.close)
-        
-    def save(self):
-        name = self._presetName.getText()
-        add_new_preset(name, self._command)
-        self.signals.save.emit(name)
-        self.close()
 
 
 

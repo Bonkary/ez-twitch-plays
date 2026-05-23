@@ -8,11 +8,15 @@ from PySide6.QtWidgets import QBoxLayout
 
 # Common Strings
 KEY = 'key'
+KEY1 = 'key1'
+KEY2 = 'key2'
 COMMAND = 'command'
 PRESS = 'press'
 HOLD = 'hold'
 PROBABILITY = 'probability'
 NICKNAME = 'nickname'
+SINGLE = 'single'
+COMBO = 'combo'
 
 @dataclass
 class const:
