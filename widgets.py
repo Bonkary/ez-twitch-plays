@@ -426,7 +426,7 @@ class SingleCommandContainer(QFrame):
         self.setLayout(self._mainLayout)
         
     def add(self, cmd) -> None:
-        
+        pass
         
 
 
