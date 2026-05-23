@@ -18,6 +18,7 @@ NICKNAME = 'nickname'
 SINGLE = 'single'
 COMBO = 'combo'
 EXPORT = 'export'
+CLIPBOARD = 'clipboard'
 
 @dataclass
 class const:

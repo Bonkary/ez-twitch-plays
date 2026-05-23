@@ -5,8 +5,10 @@ from PySide6.QtWidgets import *
 from constants import *
 import widgets as wdgts
 from configurations import PRESETS, SETTINGS
+import configurations as cfg
 from typing import Literal
 import json
+import subprocess
 
 class Export(QDialog):
     def __init__(self, parent=None):
@@ -45,8 +47,10 @@ class Export(QDialog):
         
         selectAllCheckbox = QCheckBox("Select all")
         selectAllCheckbox.setFont(const.gui.DEFAULT_FONT)
-        clipboardCheckbox = QCheckBox("Copy file to clipboard")
-        clipboardCheckbox.setFont(const.gui.DEFAULT_FONT)
+        self._clipboardCheckbox = QCheckBox("Copy file to clipboard")
+        self._clipboardCheckbox.setFont(const.gui.DEFAULT_FONT)
+        if SETTINGS[EXPORT][CLIPBOARD]:
+            self._clipboardCheckbox.setCheckState(Qt.CheckState.Checked)
         exportButton = QPushButton("Export")
         exportButton.setStyleSheet("font-size: 15px;")
         
@@ -59,12 +63,20 @@ class Export(QDialog):
         mainLayout.addSpacing(10)
         mainLayout.addWidget(selectAllCheckbox, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(30)
-        mainLayout.addWidget(clipboardCheckbox, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addWidget(self._clipboardCheckbox, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(20)
         mainLayout.addWidget(exportButton)
         mainLayout.addStretch()
         
         exportButton.clicked.connect(self.export)
+        self._clipboardCheckbox.stateChanged.connect(self.update_clipboard_setting)
+    
+    def update_clipboard_setting(self) -> None:
+        state = self._clipboardCheckbox.checkState()
+        if state == Qt.CheckState.Checked:
+            cfg.update_settings(setting='clipboard', value=True)
+        else:
+            cfg.update_settings(setting='clipboard', value=False)
     
     def export(self) -> None:
         toExport = []
@@ -80,7 +92,11 @@ class Export(QDialog):
         exportPath = os.path.join(dirs.DOWNLOADS, 'preset_export.json')
         with open(exportPath, 'w') as file:
             file.write(json.dumps(presetExports))
-            
+
+        if SETTINGS[EXPORT]['clipboard']:
+            path = os.path.abspath(exportPath)
+            subprocess.run(['powershell', 'Set-Clipboard', '-LiteralPath', path])
+        
         self.close()
             
 

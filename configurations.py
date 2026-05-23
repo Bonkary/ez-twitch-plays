@@ -31,7 +31,10 @@ def add_imports(presets: list[dict]) -> None:
         file.write(json.dumps(PRESETS))
 
 def update_settings(setting: str, value: Any) -> None:
-    SETTINGS[setting][value]
+    if setting == 'clipboard':
+        SETTINGS[EXPORT][setting] = value
+    else:
+        SETTINGS[setting][value]
     with open(files.SETTINGS, 'w') as file:
         file.write(json.dumps(SETTINGS))
 
