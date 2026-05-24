@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtCore import Qt, Slot, Signal, QObject
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout, QFileDialog, QStyle, QMessageBox
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout, QFileDialog, QStyle, QMessageBox, QStackedLayout
 from PySide6.QtGui import QPalette, QFont, QIcon
 from constants import *
 from typing import Literal, Any
@@ -165,6 +165,7 @@ class NoPadVBoxLayout(QVBoxLayout):
         self.setSpacing(0)
 
 # Inputs
+# TODO: dont allow duplicate nickname
 class SingleCommandInputs(QFrame):
     def __init__(self, preset_manager: ControlManager, parent=None):
         super().__init__(parent)
@@ -565,11 +566,13 @@ class ControlManager(QFrame):
             self._presetDropdown.addItem(name)
         self._presetDropdown.setCurrentIndex(-1)
         
-        buttonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 86px; height: 20px; background: {const.colors.DARK_PURPLE};"
+        presetButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 86px; height: 20px; background: {const.colors.DARK_PURPLE};"
+        playButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 40px; background: {const.colors.DARK_PURPLE};"
+        
         self._newButton = QPushButton(text='New')
-        self._newButton.setStyleSheet(buttonStyleSheet)
+        self._newButton.setStyleSheet(presetButtonStyleSheet)
         self._deleteButton = QPushButton(text='Delete')
-        self._deleteButton.setStyleSheet(buttonStyleSheet)
+        self._deleteButton.setStyleSheet(presetButtonStyleSheet)
         self._autosave = QCheckBox(text='Autosave')
         self._importButton = QPushButton(text='Import')
         self._exportButton = QPushButton(text='Export')
@@ -588,6 +591,12 @@ class ControlManager(QFrame):
         importLayout.addSpacing(10)
         importLayout.addWidget(self._exportButton)
         
+        # Play/Stop
+        self._playLayout = QStackedLayout()
+        self._playLayout.insertWidget(0, self._playButton)
+        self._playLayout.insertWidget(1, self._stopButton)
+        self._playLayout.setCurrentWidget(self._playButton)
+        
         # Main Layout
         mainLayout.addSpacing(50)
         mainLayout.addWidget(self._presetDropdown)
@@ -595,12 +604,16 @@ class ControlManager(QFrame):
         mainLayout.addLayout(buttonLayout)
         mainLayout.addSpacing(10)
         mainLayout.addLayout(importLayout)
+        mainLayout.addSpacing(50)
+        mainLayout.addLayout(self._playLayout)
         
         self._newButton.clicked.connect(self.new_preset)
         self._exportButton.clicked.connect(self.export)
         self._presetDropdown.signals.textChanged.connect(lambda: self.signals.fillContainer.emit(self._presetDropdown.getCurrentText()))
         self._deleteButton.clicked.connect(self.delete)
         self._importButton.clicked.connect(self.import_presets)
+        self._playButton.clicked.connect(self.play)
+        self._stopButton.clicked.connect(self.stop)
         
     def get_preset(self) -> str:
         return self._presetDropdown.getCurrentText().strip()
@@ -632,6 +645,13 @@ class ControlManager(QFrame):
     
     @Slot()
     def export(self) -> None:
+        if not PRESETS:
+            msg = QMessageBox(text="Ye doth have nothin' to export.")
+            
+            msg.setFont(const.gui.DEFAULT_FONT)
+            msg.exec()
+            return
+            
         popup = popups.Export()
         popup.exec()
 
@@ -648,8 +668,13 @@ class ControlManager(QFrame):
             else:
                 return
 
-# Containers
-# TODO: figure out handling duplicate nicknames 
+    def play(self) -> None:
+        self._playLayout.setCurrentWidget(self._stopButton)
+    
+    def stop(self) -> None:
+        self._playLayout.setCurrentWidget(self._playButton)
+
+# Containers 
 class CommandContainer(QFrame):
     def __init__(self, control_manager: ControlManager, cmd_type: Literal['single', 'combo'], parent=None):
         super().__init__(parent)

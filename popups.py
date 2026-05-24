@@ -27,7 +27,6 @@ class Export(QDialog):
         # Preset Layout
         margin = 20
         selectFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
-        selectFont.setUnderline(True)
         selectTitle = QLabel("Select presets")
         selectTitle.setFont(selectFont)
         presetsLayout = QGridLayout()
@@ -62,7 +61,7 @@ class Export(QDialog):
         mainLayout.addWidget(title, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(20)
         mainLayout.addWidget(selectTitle, alignment=const.gui.ALIGN_CENTER)
-        mainLayout.addSpacing(5)
+        mainLayout.addSpacing(15)
         mainLayout.addLayout(presetsLayout)
         mainLayout.addStretch()
         mainLayout.addWidget(self._selectAllCheckbox, alignment=const.gui.ALIGN_CENTER)
@@ -100,12 +99,16 @@ class Export(QDialog):
         elif clipboardState == Qt.CheckState.Unchecked and not SETTINGS[EXPORT][CLIPBOARD] == False:
             cfg.update_setting(setting=CLIPBOARD, value=False)
     
-    def export(self) -> None:
+    def export(self) -> None:        
         toExport = []
         for checkbox in self._checkboxes:
             isChecked = checkbox.checkState()
             if isChecked == Qt.CheckState.Checked:
                 toExport.append(checkbox.text())
+        
+        if not toExport:
+            QMessageBox.about(None, "Uhhhhh", "You didn't select any presets...")
+            return
         
         presetExports = {}
         for preset in toExport:
