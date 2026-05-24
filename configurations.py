@@ -15,20 +15,16 @@ def create_preset(preset_name: dict, cmd: dict = None, cmd_type: Literal['single
     if cmd and cmd_type:
         newPreset[preset_name][cmd_type].append(cmd)
     PRESETS.update(newPreset)
-    with open(files.PRESETS, 'w') as file:
-        file.write(json.dumps(PRESETS))
-
+    update_presets_file()
 
 def update_preset(*, preset: str, cmd: dict, cmd_type: Literal['single', 'combo']) -> None:
     PRESETS[preset][cmd_type].append(cmd)
-    with open(files.PRESETS, 'w') as file:
-        file.write(json.dumps(PRESETS))
+    update_presets_file()
         
 def add_imports(presets: list[dict]) -> None:
     for preset in presets:
         PRESETS.update(preset)
-    with open(files.PRESETS, 'w') as file:
-        file.write(json.dumps(PRESETS))
+    update_presets_file()
 
 def update_settings(setting: str, value: Any) -> None:
     if setting == 'clipboard':
@@ -37,6 +33,23 @@ def update_settings(setting: str, value: Any) -> None:
         SETTINGS[setting][value]
     with open(files.SETTINGS, 'w') as file:
         file.write(json.dumps(SETTINGS))
+
+def remove_command(preset: str, nickname: str, cmd_type: Literal['single', 'combo']) -> None:
+    for cmd in PRESETS[preset][cmd_type]:
+        if list(cmd.keys())[0] == nickname:
+            toRemove = cmd
+            break
+    PRESETS[preset][cmd_type].remove(toRemove)
+    update_presets_file()
+
+def remove_preset(preset: str) -> None:
+    if preset in PRESETS:
+        del PRESETS[preset]
+    update_presets_file()
+
+def update_presets_file() -> None:
+    with open(files.PRESETS, 'w') as file:
+        file.write(json.dumps(PRESETS))
 
 # CONFIG
 if not os.path.exists(dirs.CONFIG):

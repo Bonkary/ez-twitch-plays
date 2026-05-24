@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtCore import Qt, Slot, Signal, QObject
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout, QFileDialog
-from PySide6.QtGui import QPalette, QFont
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout, QFileDialog, QStyle, QMessageBox
+from PySide6.QtGui import QPalette, QFont, QIcon
 from constants import *
 from typing import Literal, Any
 from configurations import PRESETS, SETTINGS
@@ -11,10 +11,13 @@ import json
 import subprocess
 import popups
 
-# General
+# General 
 class TitledDropdown(QFrame):
     def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], titleFont: QFont = const.gui.DEFAULT_FONT):
         super().__init__()
+        self.signals = DropwdownSignals()
+        self._values: list[str] = []
+        
         self.setMinimumHeight(0)
         match titlePlacement:
             case 'top':
@@ -38,8 +41,11 @@ class TitledDropdown(QFrame):
         mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addWidget(self._dropdown)
         
+        self._dropdown.currentTextChanged.connect(self.signals.textChanged.emit)
+        
     def addItem(self, item: str) -> None:
         self._dropdown.addItem(item)
+        self._values.append(item)
         
     def setCurrentText(self, text: str|int) -> None:
         self._dropdown.setCurrentText(text)
@@ -52,6 +58,12 @@ class TitledDropdown(QFrame):
         
     def setPlaceholderText(self, text: str|int) -> None:
         self._dropdown.setPlaceholderText(text)
+        
+    def removeItem(self, item: str) -> None:
+        self._values.remove(item)
+        self._dropdown.clear()
+        for value in self._values:
+            self._dropdown.addItem(value)
             
 class TitledLineEdit(QFrame):
     def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], 
@@ -104,6 +116,26 @@ class TitledLineEdit(QFrame):
     def clear(self) -> None:
         self._entry.setText("")
 
+class TitledLabel(QFrame):
+    def __init__(self, title: str, text: str, title_font: QFont = const.gui.DEFAULT_FONT, 
+                 text_font: QFont = const.gui.DEFAULT_FONT, spacing: int = 3, underline: bool = True):
+        super().__init__()
+        
+        mainLayout = NoPadVBoxLayout()
+        mainLayout.setAlignment(const.gui.ALIGN_CENTER)
+        self.setLayout(mainLayout)
+        
+        titleLabel = QLabel(title)
+        title_font.setUnderline(underline)
+        titleLabel.setFont(title_font)
+        
+        textLabel = QLabel(text)
+        textLabel.setFont(text_font)
+        
+        mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(spacing)
+        mainLayout.addWidget(textLabel, alignment=const.gui.ALIGN_CENTER)
+
 # Layouts
 class NoPadHBoxLayout(QHBoxLayout):
     def __init__(self, **kwargs):
@@ -122,10 +154,7 @@ class NoPadVBoxLayout(QVBoxLayout):
         self.setSpacing(0)
 
 # Inputs
-class InputSignals(QObject):
-    add = Signal(str)
-
-class SingleButtonInputs(QFrame):
+class SingleCommandInputs(QFrame):
     def __init__(self, preset_manager: PresetManager, parent=None):
         super().__init__(parent)
         self.signals = InputSignals()
@@ -236,9 +265,11 @@ class SingleButtonInputs(QFrame):
         else:
             cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=SINGLE)
         
+        newCmd = SingleCommand(cmd=cmd)
+        self.signals.addCommand.emit(newCmd)
         self.clear_inputs()
             
-class ComboButtonInputs(QFrame):
+class ComboCommandInputs(QFrame):
     def __init__(self, preset_manager: PresetManager, parent=None):
         super().__init__(parent)
         self._presetManager = preset_manager
@@ -249,7 +280,7 @@ class ComboButtonInputs(QFrame):
         
         titleFont = QFont()
         titleFont.setPointSize(const.gui.DEFAULT_FONT.pointSize()+5)
-        title = QLabel("New Button Combo")
+        title = QLabel("New Combo Command")
         title.setAlignment(const.gui.ALIGN_CENTER)
         title.setFont(titleFont)
         
@@ -347,19 +378,125 @@ class ComboButtonInputs(QFrame):
         else:
             cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=COMBO)
         
+        newCmd = ComboCommand(cmd=cmd)
+        self.signals.addCommand.emit(newCmd)
         self.clear_inputs()
-            
+
+class SingleCommand(QFrame):
+    def __init__(self, cmd: dict, parent=None):
+        super().__init__(parent)
+        self.signals = CommandSignals()
+        
+        mainLayout = NoPadVBoxLayout()
+        self.setLayout(mainLayout)
+        
+        self.nickname = list(cmd.keys())[0]
+        key = cmd[self.nickname][KEY]
+        pressCmd = cmd[self.nickname][PRESS]
+        holdCmd = cmd[self.nickname][HOLD]
+        prob = cmd[self.nickname][PROBABILITY]
+        
+        # Nickname
+        nicknameLayout = NoPadHBoxLayout()
+        nicknameLabel = QLabel(self.nickname)
+        nicknameFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
+        nicknameFont.setUnderline(True)
+        nicknameLabel.setFont(nicknameFont)
+        
+        trashIcon = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
+        self.trashButton = QPushButton(flat=True)
+        self.trashButton.setStyleSheet(f"background-color: {const.colors.TWITCH_PURPLE}")
+        self.trashButton.setIcon(QIcon(trashIcon))
+        
+        nicknameLayout.addWidget(nicknameLabel)
+        nicknameLayout.addWidget(self.trashButton)
+        
+        pressLabel = QLabel(f"Press: {pressCmd}")
+        pressLabel.setFont(const.gui.DEFAULT_FONT)
+        holdLabel = QLabel(f"Hold: {holdCmd}")
+        holdLabel.setFont(const.gui.DEFAULT_FONT)
+        keyLabel = QLabel(f'Key: {key}')
+        probLabel = QLabel(f"Probability: {prob}")
+        
+        mainLayout.addLayout(nicknameLayout)
+        mainLayout.addSpacing(5)
+        mainLayout.addWidget(pressLabel)
+        mainLayout.addSpacing(5)
+        mainLayout.addWidget(holdLabel)
+        mainLayout.addSpacing(5)
+        mainLayout.addWidget(keyLabel)
+        mainLayout.addSpacing(3)
+        mainLayout.addWidget(probLabel)
+        
+        self.trashButton.clicked.connect(self.delete)
+
+    def delete(self) -> None:
+        self.signals.deleteCommand.emit(self.nickname)
+
+class ComboCommand(QFrame):
+    def __init__(self, cmd: dict, parent=None):
+        super().__init__(parent)
+        self.signals = CommandSignals()
+        
+        mainLayout = NoPadVBoxLayout()
+        self.setLayout(mainLayout)
+        
+        self.nickname = list(cmd.keys())[0]
+        key1 = cmd[self.nickname][KEY1]
+        key2 = cmd[self.nickname][KEY2]
+        pressCmd = cmd[self.nickname][PRESS]
+        holdCmd = cmd[self.nickname][HOLD]
+        prob = cmd[self.nickname][PROBABILITY]
+        
+        # Nickname
+        nicknameLayout = NoPadHBoxLayout()
+        nicknameLabel = QLabel(self.nickname)
+        nicknameFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
+        nicknameFont.setUnderline(True)
+        nicknameLabel.setFont(nicknameFont)
+        
+        trashIcon = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
+        self.trashButton = QPushButton(flat=True)
+        self.trashButton.setStyleSheet(f"background-color: {const.colors.TWITCH_PURPLE}")
+        self.trashButton.setIcon(QIcon(trashIcon))
+        
+        nicknameLayout.addWidget(nicknameLabel)
+        nicknameLayout.addWidget(self.trashButton)
+        
+        pressLabel = QLabel(f"Press: {pressCmd}")
+        pressLabel.setFont(const.gui.DEFAULT_FONT)
+        holdLabel = QLabel(f"Hold: {holdCmd}")
+        holdLabel.setFont(const.gui.DEFAULT_FONT)
+        keyLabel = QLabel(f'Keys: {key1} + {key2}')
+        probLabel = QLabel(f"Probability: {prob}")
+        
+        mainLayout.addLayout(nicknameLayout)
+        mainLayout.addSpacing(5)
+        mainLayout.addWidget(pressLabel)
+        mainLayout.addSpacing(5)
+        mainLayout.addWidget(holdLabel)
+        mainLayout.addSpacing(5)
+        mainLayout.addWidget(keyLabel)
+        mainLayout.addSpacing(3)
+        mainLayout.addWidget(probLabel)
+        
+        self.trashButton.clicked.connect(self.delete)
+        
+    def delete(self) -> None:
+        self.signals.deleteCommand.emit(self.nickname)
+
 # Managers
 class PresetManager(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+        self.signals = ManagerSignals()
         mainLayout = NoPadVBoxLayout()
         self.setLayout(mainLayout)
         
         self._presetDropdown = TitledDropdown(title='Preset', titlePlacement='top')
         for name in PRESETS:
             self._presetDropdown.addItem(name)
+        self._presetDropdown.setCurrentIndex(-1)
         
         self._newButton = QPushButton(text='New')
         self._deleteButton = QPushButton(text='Delete')
@@ -388,13 +525,17 @@ class PresetManager(QFrame):
         
         self._newButton.clicked.connect(self.new_preset)
         self._exportButton.clicked.connect(self.export)
-
+        self._presetDropdown.signals.textChanged.connect(lambda: self.signals.fillContainer.emit(self._presetDropdown.getCurrentText()))
+        self._deleteButton.clicked.connect(self.delete)
+        
+        
     def get_preset(self) -> str:
         return self._presetDropdown.getCurrentText().strip()
 
     def add_preset(self, name: str) -> None:
         self._presetDropdown.addItem(name)
         self._presetDropdown.setCurrentText(name)
+        self.signals.clearContainer.emit()
         
     def new_preset(self) -> None:
         name, ok = QInputDialog.getText(self, "New Preset Name", "Give name for preset.", QLineEdit.Normal, "")
@@ -418,36 +559,130 @@ class PresetManager(QFrame):
         popup = popups.Export()
         popup.exec()
 
-# Containers
-class SingleCommand(QFrame):
-    def __init__(self, active_preset: str, nickname: str, parent=None):
-        super().__init__(parent)
-        
-        mainLayout = QVBoxLayout()
-        self.setLayout(mainLayout)
-        
-        cmd = PRESETS[active_preset][nickname]
-        nicknameLabel = QLabel(cmd[nickname])
-        nicknameLabel.setFont(QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=20))
+    def delete(self) -> None:
+        preset = self._presetDropdown.getCurrentText()
+        if preset:
+            answer = QMessageBox.question(None, "Confirmation", f"Are you sure you want to delete {preset}?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if answer == QMessageBox.StandardButton.Yes:
+                self.signals.clearContainer.emit()
+                self._presetDropdown.removeItem(preset)
+                self._presetDropdown.setCurrentIndex(-1)
+                cfg.remove_preset(preset)
+            else:
+                return
 
-class SingleCommandContainer(QFrame):
-    def __init__(self, parent=None):
+# Containers
+# TODO: figure out handling duplicate nicknames 
+class CommandContainer(QFrame):
+    def __init__(self, preset_manager: PresetManager, cmd_type: Literal['single', 'combo'], parent=None):
         super().__init__(parent)
+        self._presetManager = preset_manager
+        self._cmdType = cmd_type
+        self._existingNicknames: list[str] = []
+        self.signals = ContainerSignals()
         
+        self.setFixedSize(QSize(620,620))     
         self._nextRow = 0
         self._nextColumn = 0
-        self._wdigetCache = []
+        self._widgetCache: list[SingleCommand | ComboCommand] = []
         
-        margin = 10
+        rootLayout = NoPadVBoxLayout()
+        rootLayout.setAlignment(const.gui.ALIGN_CENTER)
+        self.setLayout(rootLayout)
+        
+        margin = 15
         self._mainLayout = QGridLayout()
+        
         self._mainLayout.setContentsMargins(margin, margin, margin, margin)
-        self.setLayout(self._mainLayout)
+        self._mainLayout.setSpacing(40)
         
-    def add(self, cmd) -> None:
-        pass
-        
+        rootLayout.addLayout(self._mainLayout)
+        rootLayout.addStretch()
+    
+    @Slot(object)
+    def add(self, cmd: SingleCommand | ComboCommand) -> None:
+        print("tu")
+        if cmd.nickname in self._existingNicknames:
+            return
+        else:
+            self._existingNicknames.append(cmd.nickname)
+        cmd.signals.deleteCommand.connect(self.delete)
+        self._mainLayout.addWidget(cmd, self._nextRow, self._nextColumn)
+        self._widgetCache.append(cmd)
+        if self._nextColumn == 3:
+            self._nextColumn = 0
+            self._nextRow += 1
+        else:
+            self._nextColumn += 1
+            self._mainLayout.setColumnStretch(self._nextColumn, 1)
+    
+    def delete(self, nickname: str) -> None:
+        preset = self._presetManager.get_preset()
+        toRemove = None
+        for widget in self._widgetCache:
+            if widget.nickname == nickname:
+                toRemove = widget
+                break
+        self._existingNicknames.remove(nickname)
+        self._mainLayout.removeWidget(toRemove)
+        self._widgetCache.remove(toRemove)
+        toRemove.deleteLater()
+        self.reorder()
+        cfg.remove_command(preset=preset, nickname=nickname, cmd_type=self._cmdType)
 
+    def fill(self, preset: str) -> None:
+        self.clear()
+        if preset:
+            allCmds = PRESETS[preset][self._cmdType]
+            for cmd in allCmds:
+                match self._cmdType:
+                    case 'single':
+                        newCmd = SingleCommand(cmd=cmd)
+                    case 'combo':
+                        newCmd = ComboCommand(cmd=cmd)
+                self.add(newCmd)
+            
+    def reorder(self) -> None:
+        self._nextColumn = 0
+        self._nextRow = 0
+        for widget in self._widgetCache:
+            self._mainLayout.removeWidget(widget)
+            
+        for widget in self._widgetCache:
+            self._mainLayout.addWidget(widget, self._nextRow, self._nextColumn)
+            if self._nextColumn == 3:
+                self._nextColumn = 0
+                self._nextRow += 1
+            else:
+                self._nextColumn += 1
+                self._mainLayout.setColumnStretch(self._nextColumn, 1)
+    
+    def clear(self) -> None:
+        self._nextColumn = 0
+        self._nextRow = 0
+        while self._mainLayout.count():
+            item = self._mainLayout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        self._widgetCache.clear()
+        self._existingNicknames.clear()
+            
 
-        
-        
+# Signals 
+class ManagerSignals(QObject):
+    fillContainer = Signal(str)
+    clearContainer = Signal()
+
+class CommandSignals(QObject):
+    deleteCommand = Signal(object)
+
+class InputSignals(QObject):
+    addCommand = Signal(object)
+
+class DropwdownSignals(QObject):
+    textChanged = Signal(str)
+   
+class ContainerSignals(QObject):
+    clearContainer = Signal()      
         

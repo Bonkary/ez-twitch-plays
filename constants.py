@@ -24,7 +24,7 @@ CLIPBOARD = 'clipboard'
 class const:
     @dataclass
     class gui:
-        MAIN_WINDOW_SIZE = QSize(1200,800)
+        MAIN_WINDOW_SIZE = QSize(1500,1000)
         DEFAULT_FONT_FAMILY = "Arial"
         DEFAULT_FONT = QFont(DEFAULT_FONT_FAMILY, pointSize=13)
         TITLE_FONT = QFont(DEFAULT_FONT_FAMILY, pointSize=20)

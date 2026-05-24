@@ -47,21 +47,41 @@ class TwitchPlays(QWidget):
         inputsLayout = wdgts.NoPadHBoxLayout()
         
         self._presetManager = wdgts.PresetManager()
-        self._singleInputs = wdgts.SingleButtonInputs(preset_manager=self._presetManager)
-        self._singleInputs.signals.add.connect(self.add_single_cmd)
-        self._comboInputs = wdgts.ComboButtonInputs(preset_manager=self._presetManager)
-        self._comboInputs.signals.add.connect(self.add_combo_cmd)
-         
-        inputsLayout.addSpacing(100)
+        self._singleInputs = wdgts.SingleCommandInputs(preset_manager=self._presetManager)
+        self._singleInputs.signals.addCommand.connect(self.add_single_cmd)
+        self._comboInputs = wdgts.ComboCommandInputs(preset_manager=self._presetManager)
+        self._comboInputs.signals.addCommand.connect(self.add_combo_cmd)
+        
+        self._singleCommandContainer = wdgts.CommandContainer(cmd_type=SINGLE, preset_manager=self._presetManager)
+        self._comboCommandContainer = wdgts.CommandContainer(cmd_type=COMBO, preset_manager=self._presetManager)
+        
+        # Inputs
+        inputsLayout.addSpacing(0)
         inputsLayout.addWidget(self._singleInputs)
         inputsLayout.addWidget(self._presetManager)
         inputsLayout.addWidget(self._comboInputs)
-        inputsLayout.addSpacing(100)
+        inputsLayout.addSpacing(0)
+        
+        # Containers
+        containerLayout = wdgts.NoPadHBoxLayout()
+        containerLayout.addSpacing(20)
+        containerLayout.addWidget(self._singleCommandContainer)
+        containerLayout.addStretch()
+        containerLayout.addWidget(self._comboCommandContainer)
+        containerLayout.addSpacing(20)
         
         mainLayout.addSpacing(20)
         mainLayout.addWidget(titleLabel)
         mainLayout.addLayout(inputsLayout)
+        mainLayout.addLayout(containerLayout)
         mainLayout.addStretch()
+        
+        self._singleInputs.signals.addCommand.connect(self._singleCommandContainer.add)
+        self._comboInputs.signals.addCommand.connect(self._comboCommandContainer.add)
+        self._presetManager.signals.fillContainer.connect(self._singleCommandContainer.fill)
+        self._presetManager.signals.fillContainer.connect(self._comboCommandContainer.fill)
+        self._presetManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
+        self._presetManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
     
     def add_single_cmd(self, cmd: dict) -> None:
         pass

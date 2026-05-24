@@ -45,8 +45,8 @@ class Export(QDialog):
             else:
                 nextCol += 1
         
-        selectAllCheckbox = QCheckBox("Select all")
-        selectAllCheckbox.setFont(const.gui.DEFAULT_FONT)
+        self._selectAllCheckbox = QCheckBox("Select all")
+        self._selectAllCheckbox.setFont(const.gui.DEFAULT_FONT)
         self._clipboardCheckbox = QCheckBox("Copy file to clipboard")
         self._clipboardCheckbox.setFont(const.gui.DEFAULT_FONT)
         if SETTINGS[EXPORT][CLIPBOARD]:
@@ -61,15 +61,22 @@ class Export(QDialog):
         mainLayout.addSpacing(5)
         mainLayout.addLayout(presetsLayout)
         mainLayout.addSpacing(10)
-        mainLayout.addWidget(selectAllCheckbox, alignment=const.gui.ALIGN_CENTER)
-        mainLayout.addSpacing(30)
+        mainLayout.addWidget(self._selectAllCheckbox, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addStretch()
         mainLayout.addWidget(self._clipboardCheckbox, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(20)
         mainLayout.addWidget(exportButton)
-        mainLayout.addStretch()
+        mainLayout.addSpacing(50)
+        
         
         exportButton.clicked.connect(self.export)
         self._clipboardCheckbox.stateChanged.connect(self.update_clipboard_setting)
+        self._selectAllCheckbox.stateChanged.connect(self.select_all)
+    
+    def select_all(self) -> None:
+        state = self._selectAllCheckbox.checkState()
+        for checkbox in self._checkboxes:
+            checkbox.setCheckState(state)
     
     def update_clipboard_setting(self) -> None:
         state = self._clipboardCheckbox.checkState()
