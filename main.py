@@ -11,6 +11,23 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.setStyleSheet("""
+            QPushButton {
+                font-size: 15px;
+                border: 2px solid black;
+                width: 100px;
+                height: 20px;
+                background: %s;
+            }
+            QPushButton:hover {
+                background: %s;
+            }
+            QComboBox {
+                border: 2px solid black;
+                background: %s
+            }
+        """ % (const.colors.DARK_PURPLE, const.colors.TWITCH_PURPLE, const.colors.DARK_PURPLE))
+        
         self.setFixedSize(const.gui.MAIN_WINDOW_SIZE)
         self.setWindowTitle("Ez Twitch Plays")
         
@@ -46,21 +63,22 @@ class TwitchPlays(QWidget):
         
         inputsLayout = wdgts.NoPadHBoxLayout()
         
-        self._presetManager = wdgts.PresetManager()
-        self._singleInputs = wdgts.SingleCommandInputs(preset_manager=self._presetManager)
-        self._singleInputs.signals.addCommand.connect(self.add_single_cmd)
-        self._comboInputs = wdgts.ComboCommandInputs(preset_manager=self._presetManager)
-        self._comboInputs.signals.addCommand.connect(self.add_combo_cmd)
+        self._controlManager = wdgts.ControlManager()
+        self._singleInputs = wdgts.SingleCommandInputs(preset_manager=self._controlManager)
+        self._comboInputs = wdgts.ComboCommandInputs(preset_manager=self._controlManager)
         
-        self._singleCommandContainer = wdgts.CommandContainer(cmd_type=SINGLE, preset_manager=self._presetManager)
-        self._comboCommandContainer = wdgts.CommandContainer(cmd_type=COMBO, preset_manager=self._presetManager)
+        
+        self._singleCommandContainer = wdgts.CommandContainer(cmd_type=SINGLE, control_manager=self._controlManager)
+        self._comboCommandContainer = wdgts.CommandContainer(cmd_type=COMBO, control_manager=self._controlManager)
         
         # Inputs
-        inputsLayout.addSpacing(0)
+        inputsLayout.addStretch()
         inputsLayout.addWidget(self._singleInputs)
-        inputsLayout.addWidget(self._presetManager)
+        inputsLayout.addStretch()
+        inputsLayout.addWidget(self._controlManager)
+        inputsLayout.addStretch()
         inputsLayout.addWidget(self._comboInputs)
-        inputsLayout.addSpacing(0)
+        inputsLayout.addStretch()
         
         # Containers
         containerLayout = wdgts.NoPadHBoxLayout()
@@ -71,29 +89,18 @@ class TwitchPlays(QWidget):
         containerLayout.addSpacing(20)
         
         mainLayout.addSpacing(20)
-        mainLayout.addWidget(titleLabel)
+        mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addLayout(inputsLayout)
+        mainLayout.addSpacing(20)
         mainLayout.addLayout(containerLayout)
         mainLayout.addStretch()
         
         self._singleInputs.signals.addCommand.connect(self._singleCommandContainer.add)
         self._comboInputs.signals.addCommand.connect(self._comboCommandContainer.add)
-        self._presetManager.signals.fillContainer.connect(self._singleCommandContainer.fill)
-        self._presetManager.signals.fillContainer.connect(self._comboCommandContainer.fill)
-        self._presetManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
-        self._presetManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
-    
-    def add_single_cmd(self, cmd: dict) -> None:
-        pass
-    
-    def add_combo_cmd(self, cmd: dict) -> None:
-        pass
-    
-    def add_command(self, cmd: tuple) -> None:
-        pass
-    
-    def add_preset(self, preset: tuple) -> None:
-        pass
+        self._controlManager.signals.fillContainer.connect(self._singleCommandContainer.fill)
+        self._controlManager.signals.fillContainer.connect(self._comboCommandContainer.fill)
+        self._controlManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
+        self._controlManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
         
 
 

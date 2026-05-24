@@ -10,6 +10,7 @@ import shutil
 import json
 import subprocess
 import popups
+import time
 
 # General 
 class TitledDropdown(QFrame):
@@ -35,8 +36,10 @@ class TitledDropdown(QFrame):
         titleLabel.setContentsMargins(0,0,0,0)
         
         self._dropdown = QComboBox()
+        self._dropdown.setStyleSheet("QComboBox { padding-left: 5px; }")
         self._dropdown.setFixedWidth(200)
         self._dropdown.setContentsMargins(0,0,0,0)
+        self._dropdown.setFont(const.gui.DEFAULT_FONT)
         
         mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addWidget(self._dropdown)
@@ -98,6 +101,7 @@ class TitledLineEdit(QFrame):
         titleLabel.setFont(titleFont)
         
         self._entry = QLineEdit()
+        self._entry.setStyleSheet(f"border: 2px solid black; background: {const.colors.DARK_PURPLE};")
         self._entry.setFixedWidth(width)
         self._entry.setFont(const.gui.DEFAULT_FONT)
 
@@ -115,6 +119,13 @@ class TitledLineEdit(QFrame):
 
     def clear(self) -> None:
         self._entry.setText("")
+        self.clear_error()
+
+    def error(self) -> None:
+        self._entry.setStyleSheet(f"border: 2px solid red; background: {const.colors.DARK_PURPLE};")
+        
+    def clear_error(self) -> None:
+        self._entry.setStyleSheet(f"border: 2px solid black; background: {const.colors.DARK_PURPLE};")
 
 class TitledLabel(QFrame):
     def __init__(self, title: str, text: str, title_font: QFont = const.gui.DEFAULT_FONT, 
@@ -155,7 +166,7 @@ class NoPadVBoxLayout(QVBoxLayout):
 
 # Inputs
 class SingleCommandInputs(QFrame):
-    def __init__(self, preset_manager: PresetManager, parent=None):
+    def __init__(self, preset_manager: ControlManager, parent=None):
         super().__init__(parent)
         self.signals = InputSignals()
         self._presetManager = preset_manager
@@ -186,11 +197,12 @@ class SingleCommandInputs(QFrame):
         self._probInput = TitledLineEdit(title="Probability (0-100)", titlePlacement='side')
         
         # Buttons
+        # styleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 20px; background: {const.colors.DARK_PURPLE}"
+        
+        
         buttonLayout = NoPadHBoxLayout()
         self._clearButton = QPushButton(text="Clear")
-        self._clearButton.setStyleSheet("font-size: 15px;")
         self._addButton = QPushButton(text="Add")
-        self._addButton.setStyleSheet("font-size: 15px;")
         buttonLayout.addWidget(self._clearButton)
         buttonLayout.addSpacing(20)
         buttonLayout.addWidget(self._addButton)
@@ -228,7 +240,40 @@ class SingleCommandInputs(QFrame):
                 prob = 0
         else:
             prob = 100
-                
+        
+        nickname = self._nicknameInput.getText().lower()
+        key = self._keyInput.getText().lower()
+        press = self._pressCmdInput.getText().lower()
+        hold = self._holdCmdInput.getText().lower()
+        
+        if not nickname:
+            self._nicknameInput.error()
+        else:
+            self._nicknameInput.clear_error()
+            
+        if not key:
+            self._keyInput.error()
+        else:
+            self._keyInput.clear_error()
+            
+        if not press and not hold:
+            self._pressCmdInput.error()
+            self._holdCmdInput.error()
+        elif press and not hold:
+            hold = "N/A"
+            self._pressCmdInput.clear_error()
+            self._holdCmdInput.clear_error()
+        elif not press and hold:
+            press = "N/A"
+            self._pressCmdInput.clear_error()
+            self._holdCmdInput.clear_error()
+        else:
+            self._pressCmdInput.clear_error()
+            self._holdCmdInput.clear_error()
+        
+        if not nickname or not key or (not press and not hold):
+            return None
+        
         return {
             NICKNAME: self._nicknameInput.getText().lower(),
             KEY: self._keyInput.getText().lower(),
@@ -247,6 +292,8 @@ class SingleCommandInputs(QFrame):
     def add(self) -> None:
         # TODO: check for valid inputs
         inputs = self.get_inputs()
+        if not inputs:
+            return
         cmd = {
             inputs[NICKNAME]: {
                 KEY: inputs[KEY],
@@ -270,7 +317,7 @@ class SingleCommandInputs(QFrame):
         self.clear_inputs()
             
 class ComboCommandInputs(QFrame):
-    def __init__(self, preset_manager: PresetManager, parent=None):
+    def __init__(self, preset_manager: ControlManager, parent=None):
         super().__init__(parent)
         self._presetManager = preset_manager
         mainLayout = NoPadVBoxLayout()
@@ -405,10 +452,20 @@ class SingleCommand(QFrame):
         
         trashIcon = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
         self.trashButton = QPushButton(flat=True)
-        self.trashButton.setStyleSheet(f"background-color: {const.colors.TWITCH_PURPLE}")
+        self.trashButton.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: 0px solid transparent;
+                    width: 12px
+                }
+                QPushButton:hover {
+                    background: %s    
+                }
+        """ % const.colors.DARK_PURPLE)
         self.trashButton.setIcon(QIcon(trashIcon))
         
         nicknameLayout.addWidget(nicknameLabel)
+        nicknameLayout.addSpacing(10)
         nicknameLayout.addWidget(self.trashButton)
         
         pressLabel = QLabel(f"Press: {pressCmd}")
@@ -457,10 +514,20 @@ class ComboCommand(QFrame):
         
         trashIcon = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
         self.trashButton = QPushButton(flat=True)
-        self.trashButton.setStyleSheet(f"background-color: {const.colors.TWITCH_PURPLE}")
+        self.trashButton.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: 0px solid transparent;
+                    width: 12px
+                }
+                QPushButton:hover {
+                    background: %s    
+                }
+        """ % const.colors.DARK_PURPLE)
         self.trashButton.setIcon(QIcon(trashIcon))
         
         nicknameLayout.addWidget(nicknameLabel)
+        nicknameLayout.addSpacing(10)
         nicknameLayout.addWidget(self.trashButton)
         
         pressLabel = QLabel(f"Press: {pressCmd}")
@@ -486,7 +553,7 @@ class ComboCommand(QFrame):
         self.signals.deleteCommand.emit(self.nickname)
 
 # Managers
-class PresetManager(QFrame):
+class ControlManager(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.signals = ManagerSignals()
@@ -498,11 +565,16 @@ class PresetManager(QFrame):
             self._presetDropdown.addItem(name)
         self._presetDropdown.setCurrentIndex(-1)
         
+        buttonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 86px; height: 20px; background: {const.colors.DARK_PURPLE};"
         self._newButton = QPushButton(text='New')
+        self._newButton.setStyleSheet(buttonStyleSheet)
         self._deleteButton = QPushButton(text='Delete')
+        self._deleteButton.setStyleSheet(buttonStyleSheet)
         self._autosave = QCheckBox(text='Autosave')
         self._importButton = QPushButton(text='Import')
         self._exportButton = QPushButton(text='Export')
+        self._playButton = QPushButton(text="Start Playing")
+        self._stopButton = QPushButton(text="Stop Playing")
         
         # New/Delete Layout
         buttonLayout = NoPadHBoxLayout()
@@ -513,21 +585,22 @@ class PresetManager(QFrame):
         # Import/Export Layout
         importLayout = NoPadVBoxLayout()
         importLayout.addWidget(self._importButton)
-        importLayout.addSpacing(5)
+        importLayout.addSpacing(10)
         importLayout.addWidget(self._exportButton)
         
         # Main Layout
         mainLayout.addSpacing(50)
         mainLayout.addWidget(self._presetDropdown)
+        mainLayout.addSpacing(10)
         mainLayout.addLayout(buttonLayout)
-        mainLayout.addSpacing(5)
+        mainLayout.addSpacing(10)
         mainLayout.addLayout(importLayout)
         
         self._newButton.clicked.connect(self.new_preset)
         self._exportButton.clicked.connect(self.export)
         self._presetDropdown.signals.textChanged.connect(lambda: self.signals.fillContainer.emit(self._presetDropdown.getCurrentText()))
         self._deleteButton.clicked.connect(self.delete)
-        
+        self._importButton.clicked.connect(self.import_presets)
         
     def get_preset(self) -> str:
         return self._presetDropdown.getCurrentText().strip()
@@ -537,6 +610,7 @@ class PresetManager(QFrame):
         self._presetDropdown.setCurrentText(name)
         self.signals.clearContainer.emit()
         
+    @Slot()
     def new_preset(self) -> None:
         name, ok = QInputDialog.getText(self, "New Preset Name", "Give name for preset.", QLineEdit.Normal, "")
         if name and ok:
@@ -551,14 +625,17 @@ class PresetManager(QFrame):
             
             presetList = []
             for preset in newPresets:
-                presetList.append(newPresets[preset])
+                presetList.append((preset, newPresets[preset]))
                 self._presetDropdown.addItem(preset)
             cfg.add_imports(presetList)
-            
+        self.signals.fillContainer.emit(self._presetDropdown.getCurrentText())
+    
+    @Slot()
     def export(self) -> None:
         popup = popups.Export()
         popup.exec()
 
+    @Slot()
     def delete(self) -> None:
         preset = self._presetDropdown.getCurrentText()
         if preset:
@@ -574,9 +651,9 @@ class PresetManager(QFrame):
 # Containers
 # TODO: figure out handling duplicate nicknames 
 class CommandContainer(QFrame):
-    def __init__(self, preset_manager: PresetManager, cmd_type: Literal['single', 'combo'], parent=None):
+    def __init__(self, control_manager: ControlManager, cmd_type: Literal['single', 'combo'], parent=None):
         super().__init__(parent)
-        self._presetManager = preset_manager
+        self._presetManager = control_manager
         self._cmdType = cmd_type
         self._existingNicknames: list[str] = []
         self.signals = ContainerSignals()
@@ -601,7 +678,6 @@ class CommandContainer(QFrame):
     
     @Slot(object)
     def add(self, cmd: SingleCommand | ComboCommand) -> None:
-        print("tu")
         if cmd.nickname in self._existingNicknames:
             return
         else:
@@ -632,7 +708,7 @@ class CommandContainer(QFrame):
 
     def fill(self, preset: str) -> None:
         self.clear()
-        if preset:
+        if preset and preset in list(PRESETS.keys()):
             allCmds = PRESETS[preset][self._cmdType]
             for cmd in allCmds:
                 match self._cmdType:

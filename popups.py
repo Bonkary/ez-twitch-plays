@@ -39,9 +39,9 @@ class Export(QDialog):
             checkbox.setFont(const.gui.DEFAULT_FONT)
             self._checkboxes.append(checkbox)
             presetsLayout.addWidget(checkbox, nextRow, nextCol)
-            if nextCol == 3:
-                nextCol += 1
-                nextRow = 0
+            if nextCol == 1:
+                nextCol = 0
+                nextRow += 1
             else:
                 nextCol += 1
         
@@ -49,8 +49,12 @@ class Export(QDialog):
         self._selectAllCheckbox.setFont(const.gui.DEFAULT_FONT)
         self._clipboardCheckbox = QCheckBox("Copy file to clipboard")
         self._clipboardCheckbox.setFont(const.gui.DEFAULT_FONT)
+        self._saveCheckbox = QCheckBox("Save the actual file")
+        self._saveCheckbox.setFont(const.gui.DEFAULT_FONT)
         if SETTINGS[EXPORT][CLIPBOARD]:
             self._clipboardCheckbox.setCheckState(Qt.CheckState.Checked)
+        if SETTINGS[EXPORT][SAVE]:
+            self._saveCheckbox.setCheckState(Qt.CheckState.Checked)
         exportButton = QPushButton("Export")
         exportButton.setStyleSheet("font-size: 15px;")
         
@@ -60,30 +64,41 @@ class Export(QDialog):
         mainLayout.addWidget(selectTitle, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(5)
         mainLayout.addLayout(presetsLayout)
-        mainLayout.addSpacing(10)
-        mainLayout.addWidget(self._selectAllCheckbox, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addStretch()
+        mainLayout.addWidget(self._selectAllCheckbox, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(10)
+        mainLayout.addWidget(self._saveCheckbox, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(10)
         mainLayout.addWidget(self._clipboardCheckbox, alignment=const.gui.ALIGN_CENTER)
-        mainLayout.addSpacing(20)
+        mainLayout.addSpacing(10)
+        
         mainLayout.addWidget(exportButton)
-        mainLayout.addSpacing(50)
+        mainLayout.addSpacing(15)
         
         
         exportButton.clicked.connect(self.export)
         self._clipboardCheckbox.stateChanged.connect(self.update_clipboard_setting)
         self._selectAllCheckbox.stateChanged.connect(self.select_all)
+        self._saveCheckbox.stateChanged.connect(self.update_save_setting)
     
     def select_all(self) -> None:
         state = self._selectAllCheckbox.checkState()
         for checkbox in self._checkboxes:
             checkbox.setCheckState(state)
     
+    def update_save_setting(self) -> None:
+        saveState = self._saveCheckbox.checkState()
+        if saveState == Qt.CheckState.Checked and not SETTINGS[EXPORT][SAVE] == True:
+            cfg.update_setting(setting=SAVE, value=True)
+        elif saveState == Qt.CheckState.Unchecked and not SETTINGS[EXPORT][SAVE] == False:
+            cfg.update_setting(setting=SAVE, value=True)
+    
     def update_clipboard_setting(self) -> None:
-        state = self._clipboardCheckbox.checkState()
-        if state == Qt.CheckState.Checked:
-            cfg.update_settings(setting='clipboard', value=True)
-        else:
-            cfg.update_settings(setting='clipboard', value=False)
+        clipboardState = self._clipboardCheckbox.checkState()
+        if clipboardState == Qt.CheckState.Checked and not SETTINGS[EXPORT][CLIPBOARD] == True:
+            cfg.update_setting(setting=CLIPBOARD, value=True)
+        elif clipboardState == Qt.CheckState.Unchecked and not SETTINGS[EXPORT][CLIPBOARD] == False:
+            cfg.update_setting(setting=CLIPBOARD, value=False)
     
     def export(self) -> None:
         toExport = []
@@ -96,13 +111,25 @@ class Export(QDialog):
         for preset in toExport:
             presetExports.update({preset: PRESETS[preset]})
         
-        exportPath = os.path.join(dirs.DOWNLOADS, 'preset_export.json')
-        with open(exportPath, 'w') as file:
+        tempPath = os.path.join(dirs.TEMP, 'preset_export.json')
+        if not os.path.exists(dirs.TEMP):
+            os.makedirs(dirs.TEMP, exist_ok=True)
+        with open(tempPath, 'w') as file:
             file.write(json.dumps(presetExports))
+        
+        path = ''
+        savePath = ''
+        if SETTINGS[EXPORT][SAVE]:
+            path = QFileDialog.getExistingDirectory(parent=None, caption="Select Preset file", dir=SETTINGS[EXPORT][PREV_SAVE_PATH], options=QFileDialog.ShowDirsOnly)
+            if path:
+                savePath = os.path.join(SETTINGS[EXPORT][PREV_SAVE_PATH], 'preset_export.json')
+                cfg.update_setting(setting=PREV_SAVE_PATH, value=path)
+                with open(savePath, 'w') as file:
+                    file.write(json.dumps(presetExports))
 
         if SETTINGS[EXPORT]['clipboard']:
-            path = os.path.abspath(exportPath)
-            subprocess.run(['powershell', 'Set-Clipboard', '-LiteralPath', path])
+            copyPath = os.path.abspath(tempPath)
+            subprocess.run(['powershell', 'Set-Clipboard', '-LiteralPath', copyPath])
         
         self.close()
             

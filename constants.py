@@ -19,6 +19,9 @@ SINGLE = 'single'
 COMBO = 'combo'
 EXPORT = 'export'
 CLIPBOARD = 'clipboard'
+SAVE = 'save'
+PREV_SAVE_PATH = 'save_path'
+CHANNEL_NAME = 'channel_name'
 
 @dataclass
 class const:
@@ -40,7 +43,7 @@ class const:
         TOP_TO_BOTTOM = QBoxLayout.Direction.TopToBottom
         BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
         
-        EXPORT_WINDOW_SIZE = QSize(300,400)
+        EXPORT_WINDOW_SIZE = QSize(300,600)
         
     @dataclass
     class colors:

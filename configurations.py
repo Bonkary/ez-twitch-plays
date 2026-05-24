@@ -8,8 +8,8 @@ from typing import Literal, Any
 def create_preset(preset_name: dict, cmd: dict = None, cmd_type: Literal['single', 'combo'] | None = None) -> None:
     newPreset = {
             preset_name: {
-                'single': [],
-                'combo': []
+                SINGLE: [],
+                COMBO: []
             }
         }
     if cmd and cmd_type:
@@ -21,13 +21,17 @@ def update_preset(*, preset: str, cmd: dict, cmd_type: Literal['single', 'combo'
     PRESETS[preset][cmd_type].append(cmd)
     update_presets_file()
         
-def add_imports(presets: list[dict]) -> None:
+def add_imports(presets: list[tuple[str:dict]]) -> None:
     for preset in presets:
-        PRESETS.update(preset)
+        name = preset[0]
+        cmds = preset[1]
+        
+        PRESETS.update({name: cmds})
+    
     update_presets_file()
 
-def update_settings(setting: str, value: Any) -> None:
-    if setting == 'clipboard':
+def update_setting(setting: str, value: Any) -> None:
+    if setting in [CLIPBOARD, SAVE, PREV_SAVE_PATH]:
         SETTINGS[EXPORT][setting] = value
     else:
         SETTINGS[setting][value]
@@ -51,6 +55,7 @@ def update_presets_file() -> None:
     with open(files.PRESETS, 'w') as file:
         file.write(json.dumps(PRESETS))
 
+
 # CONFIG
 if not os.path.exists(dirs.CONFIG):
     os.makedirs(dirs.CONFIG, exist_ok=True)
@@ -69,9 +74,11 @@ if os.path.exists(files.SETTINGS):
         SETTINGS = json.loads(file.read())
 else:
     SETTINGS = {
-        'channel_name': None,
-        'export': {
-            'clipboard': False
+        CHANNEL_NAME: None,
+        EXPORT: {
+            CLIPBOARD: True,
+            SAVE: False,
+            PREV_SAVE_PATH: dirs.DOWNLOADS
         }
     }
     with open(files.SETTINGS, 'w') as file:
