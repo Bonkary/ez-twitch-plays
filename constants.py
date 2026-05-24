@@ -4,7 +4,9 @@ from pathlib import Path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QBoxLayout
+from platform_connection import Twitch
 
+TWITCH = Twitch()
 
 # Common Strings
 KEY = 'key'
@@ -22,6 +24,7 @@ CLIPBOARD = 'clipboard'
 SAVE = 'save'
 PREV_SAVE_PATH = 'save_path'
 CHANNEL_NAME = 'channel_name'
+VALID_CMDS = 'valid_cmds'
 
 @dataclass
 class const:
@@ -51,7 +54,7 @@ class const:
         TWITCH_PURPLE = '#5C3B99'
         DARK_PURPLE = '#4c3080'
         GREEN = 'green'
-        RED = 'red'
+        RED = '#AD0F00'
         BLACK = 'black'
         WHITE = 'white'
 

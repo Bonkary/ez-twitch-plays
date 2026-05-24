@@ -12,3 +12,5 @@ Planned Features:
     Export something to put commands into a bot
     Tutorial
     See available keys
+    Mouse inputs
+    Random inputs bot

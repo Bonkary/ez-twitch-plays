@@ -8,6 +8,7 @@ from configurations import update_preset, create_preset
 from typing import Literal
 
 class MainWindow(QMainWindow):
+    '''Main Window to hold everything'''
     def __init__(self):
         super().__init__()
 
@@ -46,6 +47,7 @@ class MainWindow(QMainWindow):
         
 
 class TwitchPlays(QWidget):
+    '''Primary widget for the app'''
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -61,17 +63,14 @@ class TwitchPlays(QWidget):
         titleLabel = QLabel("Ez Twitch Plays", alignment=const.gui.ALIGN_CENTER)
         titleLabel.setFont(const.gui.TITLE_FONT)
         
-        inputsLayout = wdgts.NoPadHBoxLayout()
-        
         self._controlManager = wdgts.ControlManager()
-        self._singleInputs = wdgts.SingleCommandInputs(preset_manager=self._controlManager)
-        self._comboInputs = wdgts.ComboCommandInputs(preset_manager=self._controlManager)
-        
-        
+        self._singleInputs = wdgts.SingleCommandInputs(control_manager=self._controlManager)
+        self._comboInputs = wdgts.ComboCommandInputs(control_manager=self._controlManager)
         self._singleCommandContainer = wdgts.CommandContainer(cmd_type=SINGLE, control_manager=self._controlManager)
         self._comboCommandContainer = wdgts.CommandContainer(cmd_type=COMBO, control_manager=self._controlManager)
         
         # Inputs
+        inputsLayout = wdgts.NoPadHBoxLayout()
         inputsLayout.addStretch()
         inputsLayout.addWidget(self._singleInputs)
         inputsLayout.addStretch()

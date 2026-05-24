@@ -9,7 +9,8 @@ def create_preset(preset_name: dict, cmd: dict = None, cmd_type: Literal['single
     newPreset = {
             preset_name: {
                 SINGLE: [],
-                COMBO: []
+                COMBO: [],
+                VALID_CMDS: []
             }
         }
     if cmd and cmd_type:

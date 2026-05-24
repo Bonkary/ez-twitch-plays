@@ -6,6 +6,7 @@ from constants import *
 from typing import Literal, Any
 from configurations import PRESETS, SETTINGS
 import configurations as cfg
+from logic.thread_objects import *
 import shutil
 import json
 import subprocess
@@ -14,6 +15,16 @@ import time
 
 # General 
 class TitledDropdown(QFrame):
+    '''
+    General Combobox that has a label to 'ID' it, I guess?
+    
+    Arguments:
+              title - Text above the dropdown
+          titleFont - Font of the title
+     titlePlacement - Where to place the title
+    
+    '''
+    
     def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], titleFont: QFont = const.gui.DEFAULT_FONT):
         super().__init__()
         self.signals = DropwdownSignals()
@@ -46,29 +57,64 @@ class TitledDropdown(QFrame):
         
         self._dropdown.currentTextChanged.connect(self.signals.textChanged.emit)
         
-    def addItem(self, item: str) -> None:
+    def addItem(self, item: str|int) -> None:
+        '''
+        Add item to the dropdown
+        
+        Arguments:
+            item - Value to add to the dropdown
+        '''
+        
         self._dropdown.addItem(item)
         self._values.append(item)
         
     def setCurrentText(self, text: str|int) -> None:
+        '''
+        Set the current value on the dropdown.
+        
+        Arguments:
+            text - Text to set the dropdown to.
+        '''
         self._dropdown.setCurrentText(text)
         
     def setCurrentIndex(self, index: int) -> None:
+        '''
+        Set the index of the dropdown.
+        
+        Arguments:
+            index - Index to the set dropdown to.
+        '''
+        
         self._dropdown.setCurrentIndex(index)
         
     def getCurrentText(self) -> str:
+        ''' Get the current text of the dropdown.'''
         return self._dropdown.currentText().strip()
         
-    def setPlaceholderText(self, text: str|int) -> None:
-        self._dropdown.setPlaceholderText(text)
-        
     def removeItem(self, item: str) -> None:
+        '''
+        Remove item from the dropdown.
+        
+        Arguments:
+            item - Value to remove from the dropdown.
+        '''
+        
         self._values.remove(item)
         self._dropdown.clear()
         for value in self._values:
             self._dropdown.addItem(value)
             
 class TitledLineEdit(QFrame):
+    '''
+    LineEdit that has a title.
+    
+    Arguments:
+               title - Title of the LineEdit
+               width - Width of the LineEdit
+             spacing - Spacing between the title and LineEdit
+      titlePlacement - Where to place the title.
+      titleAlignment - Alignment of the title
+    '''
     def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], 
                  titleFont: QFont = const.gui.DEFAULT_FONT,
                  titleAlignment: Literal['left', 'right', 'center'] = 'left',
@@ -112,22 +158,33 @@ class TitledLineEdit(QFrame):
         mainLayout.addWidget(self._entry, alignment=alignment)
         
     def getText(self) -> str:
+        '''Get the text from the LineEdit'''
         return self._entry.text().strip()
     
     def setText(self, text: str) -> None:
+        '''Set the text in the LineEdit'''
         self._entry.setText(text)
 
     def clear(self) -> None:
+        '''Clear the LineEdit'''
         self._entry.setText("")
         self.clear_error()
 
     def error(self) -> None:
+        '''Highlight the border red'''
         self._entry.setStyleSheet(f"border: 2px solid red; background: {const.colors.DARK_PURPLE};")
         
     def clear_error(self) -> None:
+        '''Remove the red border'''
         self._entry.setStyleSheet(f"border: 2px solid black; background: {const.colors.DARK_PURPLE};")
 
 class TitledLabel(QFrame):
+    '''
+    Label that has a title.
+    
+    Arguments: 
+        title - 
+    '''
     def __init__(self, title: str, text: str, title_font: QFont = const.gui.DEFAULT_FONT, 
                  text_font: QFont = const.gui.DEFAULT_FONT, spacing: int = 3, underline: bool = True):
         super().__init__()
@@ -149,6 +206,7 @@ class TitledLabel(QFrame):
 
 # Layouts
 class NoPadHBoxLayout(QHBoxLayout):
+    '''QHBoxLayout that has no padding around it.'''
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
@@ -157,6 +215,7 @@ class NoPadHBoxLayout(QHBoxLayout):
         self.setSpacing(0)
         
 class NoPadVBoxLayout(QVBoxLayout):
+    '''QVBoxLayout that has no padding around it.'''
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
@@ -167,10 +226,17 @@ class NoPadVBoxLayout(QVBoxLayout):
 # Inputs
 # TODO: dont allow duplicate nickname
 class SingleCommandInputs(QFrame):
-    def __init__(self, preset_manager: ControlManager, parent=None):
+    '''
+    This is where all the inputs are for the single commands.
+    
+    Arguments:
+        control_manager - The ControlManager
+    '''
+    
+    def __init__(self, control_manager: ControlManager, parent=None):
         super().__init__(parent)
         self.signals = InputSignals()
-        self._presetManager = preset_manager
+        self._presetManager = control_manager
         
         margin = 8
         rootLayout = NoPadHBoxLayout()
@@ -232,6 +298,7 @@ class SingleCommandInputs(QFrame):
         self._clearButton.clicked.connect(self.clear_inputs)
         
     def get_inputs(self) -> dict:
+        '''Get the inputs. If there are empty ones, it will let you know.'''
         if self._probInput.getText():
             try:
                 prob = int(self._probInput.getText())
@@ -284,6 +351,7 @@ class SingleCommandInputs(QFrame):
         }
     
     def clear_inputs(self) -> None:
+        '''Clear all the inputs.'''
         self._nicknameInput.clear()
         self._keyInput.clear()
         self._pressCmdInput.clear()
@@ -291,7 +359,9 @@ class SingleCommandInputs(QFrame):
         self._probInput.clear()
 
     def add(self) -> None:
-        # TODO: check for valid inputs
+        '''Add a new single command.
+           If there's no preset already set, then it'll prompt for a name.
+        '''
         inputs = self.get_inputs()
         if not inputs:
             return
@@ -318,9 +388,16 @@ class SingleCommandInputs(QFrame):
         self.clear_inputs()
             
 class ComboCommandInputs(QFrame):
-    def __init__(self, preset_manager: ControlManager, parent=None):
+    '''
+    The inputs for the ComboCommands.
+    
+    Arguments:
+        control_manager - The ControlManager
+    
+    '''
+    def __init__(self, control_manager: ControlManager, parent=None):
         super().__init__(parent)
-        self._presetManager = preset_manager
+        self._presetManager = control_manager
         mainLayout = NoPadVBoxLayout()
         self.setLayout(mainLayout)
         
@@ -377,6 +454,7 @@ class ComboCommandInputs(QFrame):
         self._addButton.clicked.connect(self.add)
 
     def clear_inputs(self) -> None:
+        """Clear all the inputs"""
         self._nicknameInput.clear()
         self._key1Input.clear()
         self._key2Input.clear()
@@ -385,6 +463,7 @@ class ComboCommandInputs(QFrame):
         self._probInput.clear()
     
     def get_inputs(self) -> dict:
+        '''Get all the inputs'''
         prob = self._probInput.getText()
         if prob:
             try:
@@ -406,6 +485,7 @@ class ComboCommandInputs(QFrame):
         }
     
     def add(self) -> None:
+        '''This prepares the command to be added by creating the widget'''
         inputs = self.get_inputs()
         cmd = {
             inputs[NICKNAME]: {
@@ -431,6 +511,12 @@ class ComboCommandInputs(QFrame):
         self.clear_inputs()
 
 class SingleCommand(QFrame):
+    '''
+    This widget is a container for the info about the command
+    
+    Arguments:
+        cmd - The command to add
+    '''
     def __init__(self, cmd: dict, parent=None):
         super().__init__(parent)
         self.signals = CommandSignals()
@@ -489,9 +575,16 @@ class SingleCommand(QFrame):
         self.trashButton.clicked.connect(self.delete)
 
     def delete(self) -> None:
+        '''This is kinda a middleman to delete a command'''
         self.signals.deleteCommand.emit(self.nickname)
 
 class ComboCommand(QFrame):
+    '''
+    This widget is a container for the info about the command
+    
+    Arguments:
+        cmd - The command to add
+    '''
     def __init__(self, cmd: dict, parent=None):
         super().__init__(parent)
         self.signals = CommandSignals()
@@ -551,12 +644,17 @@ class ComboCommand(QFrame):
         self.trashButton.clicked.connect(self.delete)
         
     def delete(self) -> None:
+        '''A middleman kinda thing to delete a command'''
         self.signals.deleteCommand.emit(self.nickname)
 
 # Managers
 class ControlManager(QFrame):
+    '''This is where all the preset controls, import/export and start/stop'''
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._executor = KeypressExecutor()
+        self._executor.moveToThread(EXEC_THREAD)
+        EXEC_THREAD.started.connect(self._executor.run)
         self.signals = ManagerSignals()
         mainLayout = NoPadVBoxLayout()
         self.setLayout(mainLayout)
@@ -568,6 +666,7 @@ class ControlManager(QFrame):
         
         presetButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 86px; height: 20px; background: {const.colors.DARK_PURPLE};"
         playButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 40px; background: {const.colors.DARK_PURPLE};"
+        stopButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 40px; background: {const.colors.RED};"
         
         self._newButton = QPushButton(text='New')
         self._newButton.setStyleSheet(presetButtonStyleSheet)
@@ -578,6 +677,7 @@ class ControlManager(QFrame):
         self._exportButton = QPushButton(text='Export')
         self._playButton = QPushButton(text="Start Playing")
         self._stopButton = QPushButton(text="Stop Playing")
+        self._stopButton.setStyleSheet(stopButtonStyleSheet)
         
         # New/Delete Layout
         buttonLayout = NoPadHBoxLayout()
@@ -608,7 +708,7 @@ class ControlManager(QFrame):
         mainLayout.addLayout(self._playLayout)
         
         self._newButton.clicked.connect(self.new_preset)
-        self._exportButton.clicked.connect(self.export)
+        self._exportButton.clicked.connect(self.create_export_window)
         self._presetDropdown.signals.textChanged.connect(lambda: self.signals.fillContainer.emit(self._presetDropdown.getCurrentText()))
         self._deleteButton.clicked.connect(self.delete)
         self._importButton.clicked.connect(self.import_presets)
@@ -616,21 +716,30 @@ class ControlManager(QFrame):
         self._stopButton.clicked.connect(self.stop)
         
     def get_preset(self) -> str:
+        '''Get the current preset from the dropdown'''
         return self._presetDropdown.getCurrentText().strip()
 
     def add_preset(self, name: str) -> None:
+        '''
+        Add a new preset and set it into the dropdown
+        
+        Arguments:
+            name - name of the preset to add
+        '''
         self._presetDropdown.addItem(name)
         self._presetDropdown.setCurrentText(name)
         self.signals.clearContainer.emit()
         
     @Slot()
     def new_preset(self) -> None:
+        '''Create a popup that prompts for the new preset name'''
         name, ok = QInputDialog.getText(self, "New Preset Name", "Give name for preset.", QLineEdit.Normal, "")
         if name and ok:
             cfg.create_preset(preset_name=name)
             self.add_preset(name)
             
     def import_presets(self) -> None:
+        '''Import a preset_export.json file (or whatever its named)'''
         path, _ = QFileDialog.getOpenFileName(self, "Select Preset file", "", "JSON files (*.json)")
         if path:
             with open(path, 'r') as file:
@@ -644,7 +753,8 @@ class ControlManager(QFrame):
         self.signals.fillContainer.emit(self._presetDropdown.getCurrentText())
     
     @Slot()
-    def export(self) -> None:
+    def create_export_window(self) -> None:
+        '''Creates the popup for the Export options'''
         if not PRESETS:
             msg = QMessageBox(text="Ye doth have nothin' to export.")
             
@@ -657,6 +767,7 @@ class ControlManager(QFrame):
 
     @Slot()
     def delete(self) -> None:
+        '''Delete the preset that is currently in the dropdown'''
         preset = self._presetDropdown.getCurrentText()
         if preset:
             answer = QMessageBox.question(None, "Confirmation", f"Are you sure you want to delete {preset}?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
@@ -669,10 +780,22 @@ class ControlManager(QFrame):
                 return
 
     def play(self) -> None:
+        '''Start the thread for listening and sending commands'''
         self._playLayout.setCurrentWidget(self._stopButton)
+        preset = self._presetDropdown.getCurrentText()
+        self._executor.set_preset(preset)
+        if not TWITCH.is_connected():
+            TWITCH.connect(channel_name=SETTINGS[CHANNEL_NAME])
+        
+        if not self._executor.isStarted:
+            EXEC_THREAD.start()
+        else:
+            self._executor.resume()
     
     def stop(self) -> None:
+        '''Stop the thread for listening and sending commands'''
         self._playLayout.setCurrentWidget(self._playButton)
+        self._executor.pause()
 
 # Containers 
 class CommandContainer(QFrame):
@@ -769,7 +892,6 @@ class CommandContainer(QFrame):
         self._widgetCache.clear()
         self._existingNicknames.clear()
             
-
 # Signals 
 class ManagerSignals(QObject):
     fillContainer = Signal(str)
