@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget
+from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget, QPushButton
 import widgets as wdgts
 from constants import *
 import sys
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
             }
         """ % (colors.DARK_PURPLE, colors.PURPLE, colors.DARK_PURPLE, colors.DEFAULT_TEXT))
         
-        self.setFixedSize(const.gui.MAIN_WINDOW_SIZE)
+        self.setFixedSize(gui.MAIN_WINDOW_SIZE)
         self.setWindowTitle("Ez Twitch Plays")
         
         self.setAutoFillBackground(True)
@@ -67,17 +67,27 @@ class TwitchPlays(QWidget):
         self.setPalette(bg)
         
         mainLayout = wdgts.NoPadVBoxLayout()
-        mainLayout.setAlignment(const.gui.ALIGN_CENTER)
+        mainLayout.setAlignment(gui.ALIGN_CENTER)
         self.setLayout(mainLayout)
         
-        titleLabel = QLabel("Chat Plays", alignment=const.gui.ALIGN_CENTER)
-        titleLabel.setFont(const.gui.TITLE_FONT)
+        titleLabel = wdgts.BasicLabel(text="Ez Twitch Plays", alignment=gui.ALIGN_CENTER, font=fonts.TITLE_FONT)
         
         self._controlManager = wdgts.ControlManager()
         self._singleInputs = wdgts.SingleCommandInputs(control_manager=self._controlManager)
         self._comboInputs = wdgts.ComboCommandInputs(control_manager=self._controlManager)
         self._singleCommandContainer = wdgts.CommandContainer(cmd_type=strs.SINGLE, control_manager=self._controlManager)
         self._comboCommandContainer = wdgts.CommandContainer(cmd_type=strs.COMBO, control_manager=self._controlManager)
+        self._tutorialButton = QPushButton("Tutorial")
+        self._validKeysButton = QPushButton("Valid Keys")
+        
+        # Header Layout
+        headerLayout = wdgts.NoPadHBoxLayout()
+        
+        #  Buttons Layout
+        headerButtonLayout = wdgts.NoPadHBoxLayout()
+        headerButtonLayout.addWidget(self._tutorialButton)
+        headerButtonLayout.addSpacing(10)
+        headerButtonLayout.addWidget(self._validKeysButton)
         
         # Inputs
         inputsLayout = wdgts.NoPadHBoxLayout()
@@ -94,7 +104,7 @@ class TwitchPlays(QWidget):
         containerLayout.addSpacing(20)
         
         mainLayout.addSpacing(20)
-        mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(10)
         mainLayout.addLayout(inputsLayout)
         mainLayout.addSpacing(20)

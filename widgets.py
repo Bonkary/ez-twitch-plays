@@ -27,37 +27,39 @@ class TitledDropdown(QFrame):
      titlePlacement - Where to place the title
     
     '''
-    def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], titleFont: QFont = const.gui.DEFAULT_FONT):
+    def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], titleFont: QFont = fonts.DEFAULT, values: list = None):
         super().__init__()
         self.signals = DropwdownSignals()
         self._values: list[str] = []
         self.alertActive = False
         
-        self.setMinimumHeight(0)
+         # Widgets
+        titleLabel = BasicLabel(text=title)
+        self._dropdown = BasicComboBox(width=200, stylesheet=stylesheets.DROPDOWN)
+        if values:
+            for value in values:
+                self._dropdown.addItem(value)
+            self.setCurrentIndex(-1)
+        
+        # Layouts
         match titlePlacement:
             case 'top':
                 mainLayout = NoPadVBoxLayout()
-                mainLayout.setDirection(const.gui.TOP_TO_BOTTOM)
+                mainLayout.setDirection(gui.TOP_TO_BOTTOM)
             case 'side':
                 mainLayout = NoPadHBoxLayout()
-                mainLayout.setDirection(const.gui.LEFT_TO_RIGHT)
+                mainLayout.setDirection(gui.LEFT_TO_RIGHT)
             case _: 
                 raise ValueError(f"{titlePlacement} is not a valid value (must be 'top' or 'side')")
-        self.setLayout(mainLayout)
         
-        titleLabel = QLabel(text=title)
-        titleLabel.setFont(const.gui.DEFAULT_FONT)
-        titleLabel.setContentsMargins(0,0,0,0)
-        
-        self._dropdown = QComboBox()
-        self._dropdown.setStyleSheet("QComboBox { padding-left: 5px; }")
-        self._dropdown.setFixedWidth(200)
-        self._dropdown.setContentsMargins(0,0,0,0)
-        self._dropdown.setFont(const.gui.DEFAULT_FONT)
-        
-        mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
+        #   Main Layout
+        mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
+        mainLayout.addSpacing(3)
         mainLayout.addWidget(self._dropdown)
         
+        self.setLayout(mainLayout)
+        
+        # Connections
         self._dropdown.currentTextChanged.connect(self.signals.textChanged.emit)
         
     def addItem(self, item: str|int) -> None:
@@ -127,42 +129,38 @@ class TitledLineEdit(QFrame):
       titleAlignment - Alignment of the title
     '''
     def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], 
-                 titleFont: QFont = const.gui.DEFAULT_FONT,
+                 titleFont: QFont = fonts.DEFAULT,
                  titleAlignment: Literal['left', 'right', 'center'] = 'left',
                  spacing: int = 10, width: int = 100, center_stretch: bool = False,
-                 padding: tuple[int:int] = (0,0), center_padding: int = 0):
+                 padding: tuple[int:int] = (0,0), center_padding: int = 0, placeholder: str = ''):
         super().__init__()
         self.signals = WidgetSignals()
         self.alertActive = False
+        
+        # Widgets
+        titleLabel = BasicLabel(text=title, font=titleFont)
+        self._entry = BasicLineEdit(width=width, stylesheet=stylesheets.LINE_EDIT, placeholder=placeholder)
+        
+        # Layouts
         match titlePlacement:
             case 'top':
                 mainLayout = NoPadVBoxLayout()
-                alignment = const.gui.ALIGN_CENTER
+                alignment = gui.ALIGN_CENTER
             case 'side':
                 mainLayout = NoPadHBoxLayout()
-                alignment = const.gui.ALIGN_CENTER
+                alignment = gui.ALIGN_CENTER
             case _: 
                 raise ValueError(f"{titlePlacement} is not a valid value")
         
         match titleAlignment:
             case 'left':
-                titleAlignment = const.gui.ALIGN_LEFT
+                titleAlignment = gui.ALIGN_LEFT
             case 'right':
-                titleAlignment = const.gui.ALIGN_RIGHT
+                titleAlignment = gui.ALIGN_RIGHT
             case 'center':
-                titleAlignment = const.gui.ALIGN_CENTER
+                titleAlignment = gui.ALIGN_CENTER
         
-        
-        self.setLayout(mainLayout)
-        
-        titleLabel = QLabel(text=title)
-        titleLabel.setFont(titleFont)
-        
-        self._entry = QLineEdit()
-        self._entry.setStyleSheet(f"border: 2px solid black; background: {colors.DARK_PURPLE};")
-        self._entry.setFixedWidth(width)
-        self._entry.setFont(const.gui.DEFAULT_FONT)
-
+        #   Main Layout
         mainLayout.addSpacing(padding[0])
         mainLayout.addWidget(titleLabel, alignment=titleAlignment)
         mainLayout.addSpacing(spacing)
@@ -173,6 +171,9 @@ class TitledLineEdit(QFrame):
         mainLayout.addWidget(self._entry, alignment=alignment)
         mainLayout.addSpacing(padding[1])
         
+        self.setLayout(mainLayout)
+        
+        # Connections
         self.signals.textChanged.connect(lambda: self._entry.textChanged.emit(self.getText()))
         
     def getText(self) -> str:
@@ -186,17 +187,17 @@ class TitledLineEdit(QFrame):
     def clear(self) -> None:
         '''Clear the LineEdit'''
         self._entry.setText("")
-        self.clear_error()
+        self.clearAlert()
 
     def alert(self) -> None:
         '''Highlight the border red'''
         self.alertActive = True
-        self._entry.setStyleSheet(f"border: 2px solid red; background: {colors.DARK_PURPLE};")
+        self._entry.setStyleSheet(stylesheets.LINE_EDIT_ALERT)
         
     def clearAlert(self) -> None:
         '''Remove the red border'''
         self.alertActive = False
-        self._entry.setStyleSheet(f"border: 2px solid black; background: {colors.DARK_PURPLE};")
+        self._entry.setStyleSheet(stylesheets.LINE_EDIT)
 
 class TitledLabel(QFrame):
     '''
@@ -205,24 +206,75 @@ class TitledLabel(QFrame):
     Arguments: 
         title - 
     '''
-    def __init__(self, title: str, text: str, title_font: QFont = const.gui.DEFAULT_FONT, 
-                 text_font: QFont = const.gui.DEFAULT_FONT, spacing: int = 3, underline: bool = True):
+    def __init__(self, title: str, text: str, title_font: QFont = fonts.DEFAULT, 
+                 text_font: QFont = fonts.DEFAULT, spacing: int = 3, underline: bool = True):
         super().__init__()
         
+        # Widgets
+        titleLabel = BasicLabel(text=title, underline=True, font=title_font)
+        textLabel = BasicLabel(text=text, font=text_font)
+        
+        # Layouts
         mainLayout = NoPadVBoxLayout()
-        mainLayout.setAlignment(const.gui.ALIGN_CENTER)
-        self.setLayout(mainLayout)
+        mainLayout.setAlignment(gui.ALIGN_CENTER)
         
-        titleLabel = QLabel(title)
-        title_font.setUnderline(underline)
-        titleLabel.setFont(title_font)
-        
-        textLabel = QLabel(text)
-        textLabel.setFont(text_font)
-        
-        mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
+        #   Main Layout
+        mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(spacing)
-        mainLayout.addWidget(textLabel, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addWidget(textLabel, alignment=gui.ALIGN_CENTER)
+        
+        self.setLayout(mainLayout)
+
+class BasicLabel(QLabel):
+    def __init__(self, text: str = None, *, font: QFont = fonts.DEFAULT, alignment = gui.ALIGN_CENTER, underline: bool = False, stylesheet: str = None, width: int = None):
+        super().__init__(parent=None, text=text)
+        font.setUnderline(underline)
+        self.setFont(font)
+        self.setAlignment(alignment)
+        if width:
+            self.setFixedWidth(width)
+        if stylesheet:
+            self.setStyleSheet(stylesheet)
+
+class BasicPushButton(QPushButton):
+    def __init__(self, *, text: str = None, font: QFont = fonts.DEFAULT, width: int = 100, height: int = 25, stylesheet: str = None, icon: QIcon = None, flat: bool = False):
+        super().__init__(parent=None, text=text)    
+        self.setFont(font)
+        self.setFixedHeight(height)
+        self.setFixedWidth(width)
+        self.setFlat(flat)
+        self.setText(text)
+        if stylesheet:
+            self.setStyleSheet(stylesheet)
+        if icon:
+            self.setIcon(icon)
+
+class BasicComboBox(QComboBox):
+    def __init__(self, *, font: QFont = fonts.DEFAULT, width: int = None, stylesheet: str = None):
+        super().__init__(parent=None)
+        self.setFont(font)
+        if width:
+            self.setFixedWidth(width)
+        if stylesheet:
+            self.setStyleSheet(stylesheet)
+            
+class BasicLineEdit(QLineEdit):
+    def __init__(self, *, font: QFont = fonts.DEFAULT, width: int = None, stylesheet: str = None, placeholder: str = None):
+        super().__init__(parent=None)
+        self.setFont(font)
+        if width:
+            self.setFixedWidth(width)
+        if stylesheet:
+            self.setStyleSheet(stylesheet)
+        if placeholder:
+            self.setText(placeholder)
+        
+class BasicCheckbox(QCheckBox):
+    def __init__(self, text: str, *, font: QFont = fonts.DEFAULT, checked: bool = False):
+        super().__init__(parent=None, text=text)
+        self.setFont(font)
+        if checked:
+            self.setCheckState(Qt.CheckState.Checked)
 
 # Layouts
 class NoPadHBoxLayout(QHBoxLayout):
@@ -230,7 +282,7 @@ class NoPadHBoxLayout(QHBoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        self.setAlignment(const.gui.ALIGN_CENTER)
+        self.setAlignment(gui.ALIGN_CENTER)
         self.setContentsMargins(0,0,0,0)
         self.setSpacing(0)
         
@@ -239,7 +291,7 @@ class NoPadVBoxLayout(QVBoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        self.setAlignment(const.gui.ALIGN_CENTER)
+        self.setAlignment(gui.ALIGN_CENTER)
         self.setContentsMargins(0,0,0,0)
         self.setSpacing(0)
 
@@ -252,30 +304,26 @@ class SingleCommandInputs(QFrame):
     Arguments:
         control_manager - The ControlManager
     '''
-    
     def __init__(self, control_manager: ControlManager, parent=None):
         super().__init__(parent)
         self.signals = InputSignals()
         self._presetManager = control_manager
         
-        rootLayout = NoPadHBoxLayout() # Squishes it all together
-        self.setLayout(rootLayout)
-        
-        mainLayout = NoPadVBoxLayout()
-        
-        # Title
-        title = QLabel(text="New Command")
-        title.setFont(const.gui.CONTAINER_TITLE_FONT)
-        
-        # Input Widgets
         centerStretch = True
+        
+        # Widgets
+        title = BasicLabel(text="New Command", font=fonts.CONTAINER_TITLE_FONT)
         self._nicknameInput = TitledLineEdit(title="Nickname", titlePlacement='side', center_stretch=centerStretch)
         self._keyInput = TitledLineEdit(title="Key", titlePlacement='side', center_stretch=centerStretch)
         self._pressCmdInput = TitledLineEdit(title="Press Cmd", titlePlacement='side', center_stretch=centerStretch)
         self._holdCmdInput = TitledLineEdit(title="Hold Cmd", titlePlacement='side', center_stretch=centerStretch)
         self._probInput = TitledLineEdit(title="Probability (0-100)", titlePlacement='side', center_stretch=centerStretch)
         
-        # Button Layout
+        # Layouts
+        rootLayout = NoPadHBoxLayout() # Squishes it all together
+        mainLayout = NoPadVBoxLayout()
+        
+        #   Button Layout
         buttonLayout = NoPadHBoxLayout()
         self._clearButton = QPushButton(text="Clear")
         self._addButton = QPushButton(text="Add")
@@ -283,8 +331,9 @@ class SingleCommandInputs(QFrame):
         buttonLayout.addSpacing(20)
         buttonLayout.addWidget(self._addButton)
         
+        #   Main Layout
         spacing = 10
-        mainLayout.addWidget(title, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addWidget(title, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(30)
         mainLayout.addWidget(self._nicknameInput)
         mainLayout.addSpacing(spacing)
@@ -301,6 +350,7 @@ class SingleCommandInputs(QFrame):
         rootLayout.addStretch()
         rootLayout.addLayout(mainLayout)
         rootLayout.addStretch()
+        self.setLayout(rootLayout)
         
         self._addButton.clicked.connect(self.add)
         self._clearButton.clicked.connect(self.clear_inputs)
@@ -323,38 +373,38 @@ class SingleCommandInputs(QFrame):
         hold = self._holdCmdInput.getText().lower()
         
         if not nickname:
-            self._nicknameInput.error()
+            self._nicknameInput.alert()
         else:
-            self._nicknameInput.clear_error()
+            self._nicknameInput.clearAlert()
             
         if not key:
-            self._keyInput.error()
+            self._keyInput.alert()
         else:
-            self._keyInput.clear_error()
+            self._keyInput.clearAlert()
             
         if not press and not hold:
-            self._pressCmdInput.error()
-            self._holdCmdInput.error()
+            self._pressCmdInput.alert()
+            self._holdCmdInput.alert()
         elif press and not hold:
             hold = "N/A"
-            self._pressCmdInput.clear_error()
-            self._holdCmdInput.clear_error()
+            self._pressCmdInput.clearAlert()
+            self._holdCmdInput.clearAlert()
         elif not press and hold:
             press = "N/A"
-            self._pressCmdInput.clear_error()
-            self._holdCmdInput.clear_error()
+            self._pressCmdInput.clearAlert()
+            self._holdCmdInput.clearAlert()
         else:
-            self._pressCmdInput.clear_error()
-            self._holdCmdInput.clear_error()
+            self._pressCmdInput.clearAlert()
+            self._holdCmdInput.clearAlert()
         
         if not nickname or not key or (not press and not hold):
             return None
         
         return {
-            strs.NICKNAME: self._nicknameInput.getText().lower(),
-            strs.KEY: self._keyInput.getText().lower(),
-            strs.PRESS: self._pressCmdInput.getText().lower(),
-            strs.HOLD: self._holdCmdInput.getText().lower(),
+            strs.NICKNAME: nickname,
+            strs.KEY: key,
+            strs.PRESS: press,
+            strs.HOLD: hold,
             strs.PROBABILITY: prob
         }
     
@@ -408,52 +458,51 @@ class ComboCommandInputs(QFrame):
         self._presetManager = control_manager
         self.signals = InputSignals()
         
-        mainLayout = NoPadVBoxLayout()
-        self.setLayout(mainLayout)
-        
-        title = QLabel("New Combo Command")
-        title.setFont(const.gui.CONTAINER_TITLE_FONT)
-        
-        # Input Widgets
+        # Widgets
+        title = BasicLabel("New Combo Command", font=fonts.CONTAINER_TITLE_FONT)
         self._nicknameInput = TitledLineEdit(title='Nickname', titlePlacement='side', spacing=22, padding=(88,0), center_padding=30)
-        self._pressInput = TitledLineEdit(title='Press Cmd', titlePlacement='side', spacing=22, padding=(81,0), center_padding=30)
-        self._holdInput = TitledLineEdit(title='Hold Cmd', titlePlacement='side', spacing=22, padding=(88,0), center_padding=30)
-        self._probInput = TitledLineEdit(title='Probability (0-100)', titlePlacement='side', spacing=22, padding=(70,0), center_padding=0)
-        
-        # Key1/Key2 Layout
-        keyLayout = NoPadHBoxLayout()
+        self._pressCmdInput = TitledLineEdit(title='Press Cmd', titlePlacement='side', spacing=22, padding=(81,0), center_padding=30)
+        self._holdCmdInput = TitledLineEdit(title='Hold Cmd', titlePlacement='side', spacing=22, padding=(88,0), center_padding=30)
+        self._probCmdInput = TitledLineEdit(title='Probability (0-100)', titlePlacement='side', spacing=22, padding=(70,0), center_padding=0)
         self._key1Input = TitledLineEdit(title="Key 1", titlePlacement='side')
         self._key2Input = TitledLineEdit(title="Key 2", titlePlacement='side')
+        self._clearButton = BasicPushButton(text="Clear", stylesheet="font-size: 15px;")
+        self._addButton = BasicPushButton(text="Add", stylesheet="font-size: 15px;")
+        
+        # Layouts
+        mainLayout = NoPadVBoxLayout()
+        
+        #   Key1/Key2 Layout
+        keyLayout = NoPadHBoxLayout()
         keyLayout.addStretch()
         keyLayout.addWidget(self._key1Input)
         keyLayout.addSpacing(10)
         keyLayout.addWidget(self._key2Input)
         keyLayout.addStretch()
         
-        # Buttons Layout
+        #   Buttons Layout
         buttonLayout = NoPadHBoxLayout()
-        self._clearButton = QPushButton(text="Clear")
-        self._clearButton.setStyleSheet("font-size: 15px;")
-        self._addButton = QPushButton(text="Add")
-        self._addButton.setStyleSheet("font-size: 15px;")
         buttonLayout.addWidget(self._clearButton)
         buttonLayout.addSpacing(20)
         buttonLayout.addWidget(self._addButton)
         
+        #   Main Layout
         spacing = 10
-        mainLayout.addWidget(title, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addWidget(title, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(30)
         mainLayout.addWidget(self._nicknameInput)
         mainLayout.addSpacing(spacing)
-        mainLayout.addWidget(self._pressInput, alignment=const.gui.ALIGN_CENTER)
-        mainLayout.addSpacing(spacing)
-        mainLayout.addWidget(self._holdInput, alignment=const.gui.ALIGN_CENTER)
-        mainLayout.addSpacing(spacing)
-        mainLayout.addWidget(self._probInput, alignment=const.gui.ALIGN_CENTER)
-        mainLayout.addSpacing(spacing)
         mainLayout.addLayout(keyLayout)
+        mainLayout.addSpacing(spacing)
+        mainLayout.addWidget(self._pressCmdInput, alignment=gui.ALIGN_CENTER)
+        mainLayout.addSpacing(spacing)
+        mainLayout.addWidget(self._holdCmdInput, alignment=gui.ALIGN_CENTER)
+        mainLayout.addSpacing(spacing)
+        mainLayout.addWidget(self._probCmdInput, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(20)
         mainLayout.addLayout(buttonLayout)
+        
+        self.setLayout(mainLayout)
         
         self._clearButton.clicked.connect(self.clear_inputs)
         self._addButton.clicked.connect(self.add)
@@ -463,29 +512,67 @@ class ComboCommandInputs(QFrame):
         self._nicknameInput.clear()
         self._key1Input.clear()
         self._key2Input.clear()
-        self._pressInput.clear()
-        self._holdInput.clear()
-        self._probInput.clear()
+        self._pressCmdInput.clear()
+        self._holdCmdInput.clear()
+        self._probCmdInput.clear()
     
     def get_inputs(self) -> dict:
         '''Get all the inputs'''
-        prob = self._probInput.getText()
-        if prob:
+        if self._probCmdInput.getText():
             try:
-                prob = int(prob)
+                prob = int(self._probCmdInput.getText())
             except ValueError:
-                # DEV STUFF RN
-                print("not a valid value dummy")
+                # JUST DEV STUFF RN
+                print("not a valid value dude")
                 prob = 0
         else:
             prob = 100
+        
+        nickname = self._nicknameInput.getText()
+        key1 = self._key1Input.getText().lower()
+        key2 = self._key2Input.getText().lower()
+        press = self._pressCmdInput.getText().lower()
+        hold = self._holdCmdInput.getText().lower()
+        
+        if not nickname:
+            self._nicknameInput.alert()
+        else:
+            self._nicknameInput.clearAlert()
             
+        if not key1:
+            self._key1Input.alert()
+        else:
+            self._key1Input.clearAlert()
+            
+        if not key2:
+            self._key2Input.alert()
+        else:
+            self._key2Input.clearAlert()
+            
+        if not press and not hold:
+            self._pressCmdInput.alert()
+            self._holdCmdInput.alert()
+        elif press and not hold:
+            hold = "N/A"
+            self._pressCmdInput.clearAlert()
+            self._holdCmdInput.clearAlert()
+        elif not press and hold:
+            press = "N/A"
+            self._pressCmdInput.clearAlert()
+            self._holdCmdInput.clearAlert()
+        else:
+            self._pressCmdInput.clearAlert()
+            self._holdCmdInput.clearAlert()
+        
+        if not nickname or not key1 or (not press and not hold):
+            return None
+        
         return {
-            strs.NICKNAME: self._nicknameInput.getText().lower(),
-            strs.KEY1: self._key1Input.getText().lower(),
-            strs.KEY2: self._key2Input.getText().lower(),
-            strs.PRESS: self._pressInput.getText().lower(),
-            strs.HOLD: self._holdInput.getText().lower(),
+            strs.NICKNAME: nickname,
+            strs.KEY1: key1,
+            strs.KEY2: key2,
+            strs.PRESS: press,
+            strs.HOLD: hold,
             strs.PROBABILITY: prob
         }
     
@@ -526,58 +613,45 @@ class SingleCommand(QFrame):
     def __init__(self, cmd: dict, parent=None):
         super().__init__(parent)
         self.signals = CommandSignals()
-        
-        mainLayout = NoPadVBoxLayout()
-        self.setLayout(mainLayout)
-        
         self.nickname = list(cmd.keys())[0]
+        
         key = cmd[self.nickname][strs.KEY]
         pressCmd = cmd[self.nickname][strs.PRESS]
         holdCmd = cmd[self.nickname][strs.HOLD]
         prob = cmd[self.nickname][strs.PROBABILITY]
-        
-        # Nickname
-        nicknameLayout = NoPadHBoxLayout()
-        nicknameLabel = QLabel(self.nickname)
-        nicknameFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
-        nicknameFont.setUnderline(True)
-        nicknameLabel.setFont(nicknameFont)
-        
         trashIcon = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
-        self.trashButton = QPushButton(flat=True)
-        self.trashButton.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: 0px solid transparent;
-                    width: 12px
-                }
-                QPushButton:hover {
-                    background: %s    
-                }
-        """ % colors.DARK_PURPLE)
-        self.trashButton.setIcon(QIcon(trashIcon))
         
+        # Widgets
+        nicknameLabel = BasicLabel(text=self.nickname, font=fonts.NICKNAME, underline=True, width=100, alignment=gui.ALIGN_LEFT)
+        self.trashButton = BasicPushButton(flat=True, icon=QIcon(trashIcon), stylesheet=stylesheets.TRASH_BUTTON)
+        pressLabel = BasicLabel(f"Press: {pressCmd}")
+        holdLabel = BasicLabel(f"Hold: {holdCmd}")
+        keyLabel = BasicLabel(f'Key: {key}')
+        probLabel = BasicLabel(f"Probability: {prob}")
+        
+        # Layouts
+        mainLayout = NoPadVBoxLayout()
+        
+        #   Nickname Layout
+        nicknameLayout = NoPadHBoxLayout()
         nicknameLayout.addWidget(nicknameLabel)
         nicknameLayout.addSpacing(10)
         nicknameLayout.addWidget(self.trashButton)
         
-        pressLabel = QLabel(f"Press: {pressCmd}")
-        pressLabel.setFont(const.gui.DEFAULT_FONT)
-        holdLabel = QLabel(f"Hold: {holdCmd}")
-        holdLabel.setFont(const.gui.DEFAULT_FONT)
-        keyLabel = QLabel(f'Key: {key}')
-        probLabel = QLabel(f"Probability: {prob}")
-        
+        #   Main Layout
         mainLayout.addLayout(nicknameLayout)
         mainLayout.addSpacing(5)
-        mainLayout.addWidget(pressLabel)
+        mainLayout.addWidget(pressLabel, alignment=gui.ALIGN_LEFT)
         mainLayout.addSpacing(5)
-        mainLayout.addWidget(holdLabel)
+        mainLayout.addWidget(holdLabel, alignment=gui.ALIGN_LEFT)
         mainLayout.addSpacing(5)
-        mainLayout.addWidget(keyLabel)
+        mainLayout.addWidget(keyLabel, alignment=gui.ALIGN_LEFT)
         mainLayout.addSpacing(3)
-        mainLayout.addWidget(probLabel)
+        mainLayout.addWidget(probLabel, alignment=gui.ALIGN_LEFT)
         
+        self.setLayout(mainLayout)
+        
+        # Connections
         self.trashButton.clicked.connect(self.delete)
 
     def delete(self) -> None:
@@ -594,49 +668,33 @@ class ComboCommand(QFrame):
     def __init__(self, cmd: dict, parent=None):
         super().__init__(parent)
         self.signals = CommandSignals()
-        
-        mainLayout = NoPadVBoxLayout()
-        self.setLayout(mainLayout)
-        
         self.nickname = list(cmd.keys())[0]
+        
         key1 = cmd[self.nickname][strs.KEY1]
         key2 = cmd[self.nickname][strs.KEY2]
         pressCmd = cmd[self.nickname][strs.PRESS]
         holdCmd = cmd[self.nickname][strs.HOLD]
         prob = cmd[self.nickname][strs.PROBABILITY]
-        
-        # Nickname
-        nicknameLayout = NoPadHBoxLayout()
-        nicknameLabel = QLabel(self.nickname)
-        nicknameFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
-        nicknameFont.setUnderline(True)
-        nicknameLabel.setFont(nicknameFont)
-        
         trashIcon = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
-        self.trashButton = QPushButton(flat=True)
-        self.trashButton.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: 0px solid transparent;
-                    width: 12px
-                }
-                QPushButton:hover {
-                    background: %s    
-                }
-        """ % colors.DARK_PURPLE)
-        self.trashButton.setIcon(QIcon(trashIcon))
         
+        # Widgets
+        nicknameLabel = BasicLabel(self.nickname, font=fonts.NICKNAME, underline=True)
+        self.trashButton = BasicPushButton(flat=True, icon=QIcon(trashIcon), stylesheet=stylesheets.TRASH_BUTTON)
+        pressLabel = BasicLabel(f"Press: {pressCmd}")
+        holdLabel = BasicLabel(f"Hold: {holdCmd}")
+        keyLabel = BasicLabel(f'Keys: {key1} + {key2}')
+        probLabel = BasicLabel(f"Probability: {prob}")
+        
+        # Layouts
+        mainLayout = NoPadVBoxLayout()
+        
+        #   Nickname Layout
+        nicknameLayout = NoPadHBoxLayout()
         nicknameLayout.addWidget(nicknameLabel)
         nicknameLayout.addSpacing(10)
         nicknameLayout.addWidget(self.trashButton)
         
-        pressLabel = QLabel(f"Press: {pressCmd}")
-        pressLabel.setFont(const.gui.DEFAULT_FONT)
-        holdLabel = QLabel(f"Hold: {holdCmd}")
-        holdLabel.setFont(const.gui.DEFAULT_FONT)
-        keyLabel = QLabel(f'Keys: {key1} + {key2}')
-        probLabel = QLabel(f"Probability: {prob}")
-        
+        #   Main Layout
         mainLayout.addLayout(nicknameLayout)
         mainLayout.addSpacing(5)
         mainLayout.addWidget(pressLabel)
@@ -647,6 +705,9 @@ class ComboCommand(QFrame):
         mainLayout.addSpacing(3)
         mainLayout.addWidget(probLabel)
         
+        self.setLayout(mainLayout)
+        
+        # Connections
         self.trashButton.clicked.connect(self.delete)
         
     def delete(self) -> None:
@@ -665,54 +726,41 @@ class ControlManager(QFrame):
         EXEC_THREAD.started.connect(self._twitchManager.start_listening)
         EXEC_THREAD.start()
         
-        # UI
+        # Widgets
+        self._newButton = BasicPushButton(text='New')
+        self._deleteButton = BasicPushButton(text='Delete')
+        self._importButton = BasicPushButton(text='Import')
+        self._exportButton = BasicPushButton(text='Export')
+        self._playButton = BasicPushButton(text="Start Playing", width=600, height=50, stylesheet=stylesheets.PLAY_BUTTON)
+        self._stopButton = BasicPushButton(text="Stop Playing", width=600, height=50, stylesheet=stylesheets.STOP_BUTTON)
+        self._presetDropdown = TitledDropdown(title='Preset', titlePlacement='top', values=PRESETS)
+        self._channelInput = TitledLineEdit(title="Twitch Channel", titlePlacement='side',
+                                            titleAlignment=gui.ALIGN_CENTER,
+                                            titleFont=fonts.CHANNEL,
+                                            placeholder=SETTINGS[strs.CHANNEL_NAME])
+        
+        # Layouts
         mainLayout = NoPadVBoxLayout()
-        self.setLayout(mainLayout)
         
-        channelFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
-        self._channelInput = TitledLineEdit(title="Twitch Channel", titlePlacement='top',
-                                            titleAlignment=const.gui.ALIGN_CENTER, titleFont=channelFont)
-        if SETTINGS[strs.CHANNEL_NAME]:
-            self._channelInput.setText(SETTINGS[strs.CHANNEL_NAME])
-        
-        self._presetDropdown = TitledDropdown(title='Preset', titlePlacement='top')
-        for name in PRESETS:
-            self._presetDropdown.addItem(name)
-        self._presetDropdown.setCurrentIndex(-1)
-        
-        presetButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 86px; height: 20px; background: {colors.DARK_PURPLE};"
-        stopButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 40px; background: {colors.RED};"
-        
-        self._newButton = QPushButton(text='New')
-        self._newButton.setStyleSheet(presetButtonStyleSheet)
-        self._deleteButton = QPushButton(text='Delete')
-        self._deleteButton.setStyleSheet(presetButtonStyleSheet)
-        self._autosave = QCheckBox(text='Autosave')
-        self._importButton = QPushButton(text='Import')
-        self._exportButton = QPushButton(text='Export')
-        self._playButton = QPushButton(text="Start Playing")
-        self._stopButton = QPushButton(text="Stop Playing")
-        self._stopButton.setStyleSheet(stopButtonStyleSheet)
-        
-        # New/Delete Layout
+        #   New/Delete Layout
         buttonLayout = NoPadHBoxLayout()
         buttonLayout.addWidget(self._newButton)
         buttonLayout.addSpacing(20)
         buttonLayout.addWidget(self._deleteButton)
         
-        # Import/Export Layout
+        #   Import/Export Layout
         importLayout = NoPadVBoxLayout()
         importLayout.addWidget(self._importButton)
         importLayout.addSpacing(10)
         importLayout.addWidget(self._exportButton)
         
-        # Play/Stop
+        #   Play/Stop
         self._playLayout = QStackedLayout()
         self._playLayout.insertWidget(0, self._playButton)
         self._playLayout.insertWidget(1, self._stopButton)
         self._playLayout.setCurrentWidget(self._playButton)
         
-        # Main Layout
+        #   Main Layout
         mainLayout.addSpacing(10)
         mainLayout.addWidget(self._channelInput)
         mainLayout.addSpacing(40)
@@ -724,6 +772,9 @@ class ControlManager(QFrame):
         mainLayout.addSpacing(10)
         mainLayout.addLayout(self._playLayout)
         
+        self.setLayout(mainLayout)
+        
+        # Connections
         self._newButton.clicked.connect(self.new_preset)
         self._exportButton.clicked.connect(self.create_export_window)
         self._presetDropdown.signals.textChanged.connect(lambda: self.signals.fillContainer.emit(self._presetDropdown.getCurrentText()))
@@ -783,7 +834,7 @@ class ControlManager(QFrame):
         if not PRESETS:
             msg = QMessageBox(text="Ye doth have nothin' to export.")
             
-            msg.setFont(const.gui.DEFAULT_FONT)
+            msg.setFont(fonts.DEFAULT)
             msg.exec()
             return
             
@@ -847,25 +898,25 @@ class CommandContainer(QFrame):
         self._presetManager = control_manager
         self._cmdType = cmd_type
         self._existingNicknames: list[str] = []
-        self.signals = ContainerSignals()
-        
-        self.setFixedSize(QSize(620,620))     
         self._nextRow = 0
         self._nextColumn = 0
         self._widgetCache: list[SingleCommand | ComboCommand] = []
+        self.signals = ContainerSignals()
+        
+        self.setFixedSize(QSize(620,620))     
         
         rootLayout = NoPadVBoxLayout()
-        rootLayout.setAlignment(const.gui.ALIGN_CENTER)
-        self.setLayout(rootLayout)
+        rootLayout.setAlignment(gui.ALIGN_CENTER)
         
         margin = 15
         self._mainLayout = QGridLayout()
-        
         self._mainLayout.setContentsMargins(margin, margin, margin, margin)
-        self._mainLayout.setSpacing(40)
+        self._mainLayout.setHorizontalSpacing(20)
+        self._mainLayout.setVerticalSpacing(30)
         
         rootLayout.addLayout(self._mainLayout)
         rootLayout.addStretch()
+        self.setLayout(rootLayout)
     
     @Slot(object)
     def add(self, cmd: SingleCommand | ComboCommand) -> None:

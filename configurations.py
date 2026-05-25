@@ -38,7 +38,6 @@ def add_imports(presets: list[tuple[str:dict]]) -> None:
     update_presets_file()
 
 def update_setting(setting: str, value: Any) -> None:
-    print("update settings")
     if setting in [strs.CLIPBOARD, strs.SAVE, strs.PREV_SAVE_PATH]:
         SETTINGS[strs.EXPORT][setting] = value
     else:
@@ -87,7 +86,8 @@ else:
             strs.CLIPBOARD: True,
             strs.SAVE: False,
             strs.PREV_SAVE_PATH: dirs.DOWNLOADS
-        }
+        },
+        strs.FIRST_START: False
     }
     with open(files.SETTINGS, 'w') as file:
         file.write(json.dumps(SETTINGS))

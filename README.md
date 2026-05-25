@@ -15,3 +15,4 @@ Planned Features:
     Mouse inputs
     Random inputs bot
     Maybe sabotage for channel points? For no reason at all
+    Duplicate presets
