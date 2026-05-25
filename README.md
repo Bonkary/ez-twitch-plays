@@ -14,3 +14,4 @@ Planned Features:
     See available keys
     Mouse inputs
     Random inputs bot
+    Maybe sabotage for channel points? For no reason at all

@@ -60,7 +60,7 @@ class TwitchPlays(QWidget):
         mainLayout.setAlignment(const.gui.ALIGN_CENTER)
         self.setLayout(mainLayout)
         
-        titleLabel = QLabel("Ez Twitch Plays", alignment=const.gui.ALIGN_CENTER)
+        titleLabel = QLabel("Chat Plays", alignment=const.gui.ALIGN_CENTER)
         titleLabel.setFont(const.gui.TITLE_FONT)
         
         self._controlManager = wdgts.ControlManager()
