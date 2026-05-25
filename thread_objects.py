@@ -1,35 +1,148 @@
-import pydirectinput
-import time
-from platform_connection import *
-from PySide6.QtCore import QThread, QThreadPool, QRunnable, QObject, Slot, Signal
-import logic.controller as cntrls
-import random
+from PySide6.QtCore import QThread, QThreadPool, QRunnable, QObject, Slot, Signal, QEvent
+# import logic.controller as cntrls
 from typing import Literal
 from constants import *
 from platform_connections import Twitch
+from configurations import PRESETS
+import random
+from threading import Event
 
 THREAD_POOL = QThreadPool.globalInstance()
 EXEC_THREAD = QThread()
 
-class Executor(QObject):
-    def __init__(self, parent=None):
+def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str, int]:
+    preset = PRESETS[preset_name]
+    singles = preset[strs.SINGLE]
+    combos = preset[strs.COMBO]
+    key: str | tuple = None
+    action: str = None
+    prob: int = None
+    foundCmd: dict = None
+    for cmd in singles:
+        nickname = list(cmd.keys())[0]
+        pressCmd = cmd[nickname][strs.PRESS]
+        holdCmd = cmd[nickname][strs.HOLD]
+        
+        if message == pressCmd:
+            foundCmd = cmd[nickname]
+            action = strs.PRESS
+            break
+        elif message == holdCmd:
+            foundCmd = cmd[nickname]
+            action = strs.HOLD
+            break
+        else:
+            continue
+    
+    if foundCmd:
+        key = foundCmd[strs.KEY]
+        prob = cmd[nickname][strs.PROBABILITY]
+    else:
+        for cmd in combos:
+            nickname = list(cmd.keys())[0]
+            pressCmd = cmd[nickname][strs.PRESS]
+            holdCmd = cmd[nickname][strs.HOLD]
+            if message == pressCmd:
+                foundCmd = cmd[nickname]
+                action = strs.PRESS
+                break
+            elif message == holdCmd:
+                foundCmd = cmd[nickname]
+                action = strs.HOLD
+                break
+            else:
+                continue
+        
+        key = (foundCmd[strs.KEY1], foundCmd[strs.KEY2])
+        prob = foundCmd[strs.PROBABILITY]
+        
+    return key, action, prob
+
+class ExecuteWorker(QRunnable):
+    def __init__(self, preset_name: str, cmd: str):
+        super().__init__()
+        self._presetName = preset_name
+        self._cmd = cmd
+        
+    def run(self) -> None:
+        key, action, prob = get_key(preset_name=self._presetName, message=self._cmd)
+        if random.randint(1,100) <= prob:
+            print("-------------------------------")
+            if type(key) == tuple:
+                print(f"{key} -- {action} -- {prob}")
+            else:
+                print(f"{key} -- {action} -- {prob}")
+            print("-------------------------------")
+        else:
+            return
+
+class ManagerSignals(QObject):
+    noPreset = Signal()
+    noChannel = Signal()
+    clearPresetAlert = Signal()
+    clearChannelAlert = Signal()
+
+class TwitchManager(QObject):
+    def __init__(self, channel_name: str, parent=None):
         super().__init__(parent)
         self._isKilled = False
         self._isPaused = False
-        self._isRunning = False
+        self._isStarted = False
+        self._twitch = Twitch(channel_name=channel_name)
+        self._presetName: str = None
+        self.signals = ManagerSignals()
         
-    def run(self) -> None:
-        pass
+        self.channelName = channel_name
     
-    def execute(self, messages: str) -> None:
-        for message in messages:
-            pass
+    def run(self) -> None:
+        self._isStarted = True
+        while not self._isKilled:
+            self._twitch.listen(on_message=self.execute)
+            
+    def execute(self, message: str) -> None:
+        if self._isPaused:
+            return
+        command = message['message']
+        if command in PRESETS[self._presetName][strs.VALID_CMDS]:
+            executor = ExecuteWorker(preset_name=self._presetName, cmd=command)
+            THREAD_POOL.start(executor)
+        else:
+            return
+    
+    def close(self) -> None:
+        self._twitch.close()
+        self.kill()
+    
+    def start_listening(self) -> None:
+        self.run()
+    
+    def set_preset(self, preset_name: str) -> None:
+        self._presetName = preset_name
+    
+    def set_channel_name(self, name: str) -> None:
+        self.channelName = name
+        self._twitch.set_channel_name(name)
     
     def kill(self) -> None:
         self._isKilled = True
-    
+        THREAD_POOL.clear()
+        
     def pause(self) -> None:
-        pass
+        self._isPaused = True
     
     def resume(self) -> None:
-        pass
+        isSuccess = False
+        if not self._presetName:
+            self.signals.noPreset.emit()
+        else:
+            self.signals.clearPresetAlert.emit()
+            
+        if not self.channelName:
+            self.signals.noChannel.emit()
+        else:
+            self.signals.clearChannelAlert.emit()
+            
+        if self.channelName and self._presetName:
+            isSuccess = True
+            self._isPaused = False
+        return isSuccess

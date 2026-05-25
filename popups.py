@@ -50,9 +50,9 @@ class Export(QDialog):
         self._clipboardCheckbox.setFont(const.gui.DEFAULT_FONT)
         self._saveCheckbox = QCheckBox("Save the actual file")
         self._saveCheckbox.setFont(const.gui.DEFAULT_FONT)
-        if SETTINGS[EXPORT][CLIPBOARD]:
+        if SETTINGS[strs.EXPORT][strs.CLIPBOARD]:
             self._clipboardCheckbox.setCheckState(Qt.CheckState.Checked)
-        if SETTINGS[EXPORT][SAVE]:
+        if SETTINGS[strs.EXPORT][strs.SAVE]:
             self._saveCheckbox.setCheckState(Qt.CheckState.Checked)
         exportButton = QPushButton("Export")
         exportButton.setStyleSheet("font-size: 15px;")
@@ -87,17 +87,17 @@ class Export(QDialog):
     
     def update_save_setting(self) -> None:
         saveState = self._saveCheckbox.checkState()
-        if saveState == Qt.CheckState.Checked and not SETTINGS[EXPORT][SAVE] == True:
-            cfg.update_setting(setting=SAVE, value=True)
-        elif saveState == Qt.CheckState.Unchecked and not SETTINGS[EXPORT][SAVE] == False:
-            cfg.update_setting(setting=SAVE, value=True)
+        if saveState == Qt.CheckState.Checked and not SETTINGS[strs.EXPORT][strs.SAVE] == True:
+            cfg.update_setting(setting=strs.SAVE, value=True)
+        elif saveState == Qt.CheckState.Unchecked and not SETTINGS[strs.EXPORT][strs.SAVE] == False:
+            cfg.update_setting(setting=strs.SAVE, value=True)
     
     def update_clipboard_setting(self) -> None:
         clipboardState = self._clipboardCheckbox.checkState()
-        if clipboardState == Qt.CheckState.Checked and not SETTINGS[EXPORT][CLIPBOARD] == True:
-            cfg.update_setting(setting=CLIPBOARD, value=True)
-        elif clipboardState == Qt.CheckState.Unchecked and not SETTINGS[EXPORT][CLIPBOARD] == False:
-            cfg.update_setting(setting=CLIPBOARD, value=False)
+        if clipboardState == Qt.CheckState.Checked and not SETTINGS[strs.EXPORT][strs.CLIPBOARD] == True:
+            cfg.update_setting(setting=strs.CLIPBOARD, value=True)
+        elif clipboardState == Qt.CheckState.Unchecked and not SETTINGS[strs.EXPORT][strs.CLIPBOARD] == False:
+            cfg.update_setting(setting=strs.CLIPBOARD, value=False)
     
     def export(self) -> None:        
         toExport = []
@@ -122,15 +122,15 @@ class Export(QDialog):
         
         path = ''
         savePath = ''
-        if SETTINGS[EXPORT][SAVE]:
-            path = QFileDialog.getExistingDirectory(parent=None, caption="Select Preset file", dir=SETTINGS[EXPORT][PREV_SAVE_PATH], options=QFileDialog.ShowDirsOnly)
+        if SETTINGS[strs.EXPORT][strs.SAVE]:
+            path = QFileDialog.getExistingDirectory(parent=None, caption="Select Preset file", dir=SETTINGS[strs.EXPORT][strs.PREV_SAVE_PATH], options=QFileDialog.ShowDirsOnly)
             if path:
-                savePath = os.path.join(SETTINGS[EXPORT][PREV_SAVE_PATH], 'preset_export.json')
-                cfg.update_setting(setting=PREV_SAVE_PATH, value=path)
+                savePath = os.path.join(SETTINGS[strs.EXPORT][strs.PREV_SAVE_PATH], 'preset_export.json')
+                cfg.update_setting(setting=strs.PREV_SAVE_PATH, value=path)
                 with open(savePath, 'w') as file:
                     file.write(json.dumps(presetExports))
 
-        if SETTINGS[EXPORT]['clipboard']:
+        if SETTINGS[strs.EXPORT]['clipboard']:
             copyPath = os.path.abspath(tempPath)
             subprocess.run(['powershell', 'Set-Clipboard', '-LiteralPath', copyPath])
         

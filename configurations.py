@@ -3,26 +3,29 @@ import json
 import sys
 from constants import *
 from typing import Literal, Any
-import dotenv
-
-
 
 # OPERATIONS
 def create_preset(preset_name: dict, cmd: dict = None, cmd_type: Literal['single', 'combo'] | None = None) -> None:
     newPreset = {
             preset_name: {
-                SINGLE: [],
-                COMBO: [],
-                VALID_CMDS: []
+                strs.SINGLE: [],
+                strs.COMBO: [],
+                strs.VALID_CMDS: []
             }
         }
     if cmd and cmd_type:
+        nickname = list(cmd.keys())[0]
         newPreset[preset_name][cmd_type].append(cmd)
+        newPreset[preset_name][strs.VALID_CMDS].append(cmd[nickname][strs.PRESS])
+        newPreset[preset_name][strs.VALID_CMDS].append(cmd[nickname][strs.HOLD])
     PRESETS.update(newPreset)
     update_presets_file()
 
 def update_preset(*, preset: str, cmd: dict, cmd_type: Literal['single', 'combo']) -> None:
     PRESETS[preset][cmd_type].append(cmd)
+    nickname = list(cmd.keys())[0]
+    PRESETS[preset][strs.VALID_CMDS].append(cmd[nickname][strs.PRESS])
+    PRESETS[preset][strs.VALID_CMDS].append(cmd[nickname][strs.HOLD])
     update_presets_file()
         
 def add_imports(presets: list[tuple[str:dict]]) -> None:
@@ -35,10 +38,11 @@ def add_imports(presets: list[tuple[str:dict]]) -> None:
     update_presets_file()
 
 def update_setting(setting: str, value: Any) -> None:
-    if setting in [CLIPBOARD, SAVE, PREV_SAVE_PATH]:
-        SETTINGS[EXPORT][setting] = value
+    print("update settings")
+    if setting in [strs.CLIPBOARD, strs.SAVE, strs.PREV_SAVE_PATH]:
+        SETTINGS[strs.EXPORT][setting] = value
     else:
-        SETTINGS[setting][value]
+        SETTINGS[setting] = value
     with open(files.SETTINGS, 'w') as file:
         file.write(json.dumps(SETTINGS))
 
@@ -78,11 +82,11 @@ if os.path.exists(files.SETTINGS):
         SETTINGS = json.loads(file.read())
 else:
     SETTINGS = {
-        CHANNEL_NAME: None,
-        EXPORT: {
-            CLIPBOARD: True,
-            SAVE: False,
-            PREV_SAVE_PATH: dirs.DOWNLOADS
+        strs.CHANNEL_NAME: None,
+        strs.EXPORT: {
+            strs.CLIPBOARD: True,
+            strs.SAVE: False,
+            strs.PREV_SAVE_PATH: dirs.DOWNLOADS
         }
     }
     with open(files.SETTINGS, 'w') as file:

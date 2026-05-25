@@ -1,11 +1,12 @@
-from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt, Slot, Signal, QThread, QThreadPool
 from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget
 import widgets as wdgts
 from constants import *
 import sys
-from configurations import update_preset, create_preset
-from typing import Literal
+from thread_objects import EXEC_THREAD
+from platform_connections import KILLER
+import time
+import faulthandler
+# faulthandler.enable()
 
 class MainWindow(QMainWindow):
     '''Main Window to hold everything'''
@@ -25,26 +26,35 @@ class MainWindow(QMainWindow):
             }
             QComboBox {
                 border: 2px solid black;
-                background: %s
+                background: %s;
             }
-        """ % (const.colors.DARK_PURPLE, const.colors.TWITCH_PURPLE, const.colors.DARK_PURPLE))
+            QLabel {
+                color: %s;
+            }
+        """ % (colors.DARK_PURPLE, colors.PURPLE, colors.DARK_PURPLE, colors.DEFAULT_TEXT))
         
         self.setFixedSize(const.gui.MAIN_WINDOW_SIZE)
         self.setWindowTitle("Ez Twitch Plays")
         
         self.setAutoFillBackground(True)
         bg = self.palette()
-        bg.setColor(self.backgroundRole(), const.colors.TWITCH_PURPLE)
+        bg.setColor(self.backgroundRole(), colors.PURPLE)
         self.setPalette(bg)
         
         rootLayout = wdgts.NoPadHBoxLayout()
         self.setLayout(rootLayout)
         
-        twitchPlays = TwitchPlays()
+        self._twitchPlays = TwitchPlays()
         
-        rootLayout.addWidget(twitchPlays)
-        self.setCentralWidget(twitchPlays)
-        
+        rootLayout.addWidget(self._twitchPlays)
+        self.setCentralWidget(self._twitchPlays)
+
+    def exit(self) -> None:
+        self._twitchPlays._controlManager._twitchManager.close()
+        KILLER.kill()
+        time.sleep(1)
+        EXEC_THREAD.terminate()
+        sys.exit(0)
 
 class TwitchPlays(QWidget):
     '''Primary widget for the app'''
@@ -53,7 +63,7 @@ class TwitchPlays(QWidget):
 
         self.setAutoFillBackground(True)
         bg = self.palette()
-        bg.setColor(self.backgroundRole(), const.colors.TWITCH_PURPLE)
+        bg.setColor(self.backgroundRole(), colors.PURPLE)
         self.setPalette(bg)
         
         mainLayout = wdgts.NoPadVBoxLayout()
@@ -66,18 +76,14 @@ class TwitchPlays(QWidget):
         self._controlManager = wdgts.ControlManager()
         self._singleInputs = wdgts.SingleCommandInputs(control_manager=self._controlManager)
         self._comboInputs = wdgts.ComboCommandInputs(control_manager=self._controlManager)
-        self._singleCommandContainer = wdgts.CommandContainer(cmd_type=SINGLE, control_manager=self._controlManager)
-        self._comboCommandContainer = wdgts.CommandContainer(cmd_type=COMBO, control_manager=self._controlManager)
+        self._singleCommandContainer = wdgts.CommandContainer(cmd_type=strs.SINGLE, control_manager=self._controlManager)
+        self._comboCommandContainer = wdgts.CommandContainer(cmd_type=strs.COMBO, control_manager=self._controlManager)
         
         # Inputs
         inputsLayout = wdgts.NoPadHBoxLayout()
-        inputsLayout.addStretch()
         inputsLayout.addWidget(self._singleInputs)
-        inputsLayout.addStretch()
         inputsLayout.addWidget(self._controlManager)
-        inputsLayout.addStretch()
         inputsLayout.addWidget(self._comboInputs)
-        inputsLayout.addStretch()
         
         # Containers
         containerLayout = wdgts.NoPadHBoxLayout()
@@ -89,6 +95,7 @@ class TwitchPlays(QWidget):
         
         mainLayout.addSpacing(20)
         mainLayout.addWidget(titleLabel, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(10)
         mainLayout.addLayout(inputsLayout)
         mainLayout.addSpacing(20)
         mainLayout.addLayout(containerLayout)
@@ -100,8 +107,6 @@ class TwitchPlays(QWidget):
         self._controlManager.signals.fillContainer.connect(self._comboCommandContainer.fill)
         self._controlManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
         self._controlManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
-        
-
 
 
 
@@ -115,6 +120,6 @@ if __name__ == "__main__":
     
     window = MainWindow()
     window.show()
-    
+    app.aboutToQuit.connect(window.exit)
     
     sys.exit(app.exec())

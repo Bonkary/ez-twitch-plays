@@ -1,7 +1,7 @@
 import pydirectinput
 import time
-from old.constants import *
-from platform_connection import *
+from constants import *
+from old.platform_connection import *
 from PySide6.QtCore import QThread, QThreadPool, QRunnable, QObject
 from logic.controller import *
 from typing import Literal

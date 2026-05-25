@@ -6,12 +6,15 @@ from constants import *
 from typing import Literal, Any
 from configurations import PRESETS, SETTINGS
 import configurations as cfg
-from logic.thread_objects import *
 import shutil
 import json
 import subprocess
 import popups
 import time
+from thread_objects import TwitchManager, EXEC_THREAD
+
+class WidgetSignals(QObject):
+    textChanged = Signal()
 
 # General 
 class TitledDropdown(QFrame):
@@ -24,11 +27,11 @@ class TitledDropdown(QFrame):
      titlePlacement - Where to place the title
     
     '''
-    
     def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], titleFont: QFont = const.gui.DEFAULT_FONT):
         super().__init__()
         self.signals = DropwdownSignals()
         self._values: list[str] = []
+        self.alertActive = False
         
         self.setMinimumHeight(0)
         match titlePlacement:
@@ -103,7 +106,15 @@ class TitledDropdown(QFrame):
         self._dropdown.clear()
         for value in self._values:
             self._dropdown.addItem(value)
-            
+    
+    def alert(self) -> None:
+        self.alertActive = True
+        self._dropdown.setStyleSheet(stylesheets.DROPDOWN_ALERT)
+    
+    def clearAlert(self) -> None:
+        self.alertActive = False
+        self._dropdown.setStyleSheet(stylesheets.DROPDOWN)
+
 class TitledLineEdit(QFrame):
     '''
     LineEdit that has a title.
@@ -118,17 +129,18 @@ class TitledLineEdit(QFrame):
     def __init__(self, *, title: str, titlePlacement: Literal['top', 'side'], 
                  titleFont: QFont = const.gui.DEFAULT_FONT,
                  titleAlignment: Literal['left', 'right', 'center'] = 'left',
-                 spacing: int = 10, width: int = 100,):
+                 spacing: int = 10, width: int = 100, center_stretch: bool = False,
+                 padding: tuple[int:int] = (0,0), center_padding: int = 0):
         super().__init__()
+        self.signals = WidgetSignals()
+        self.alertActive = False
         match titlePlacement:
             case 'top':
                 mainLayout = NoPadVBoxLayout()
-                mainLayout.setDirection(const.gui.TOP_TO_BOTTOM)
                 alignment = const.gui.ALIGN_CENTER
             case 'side':
                 mainLayout = NoPadHBoxLayout()
-                mainLayout.setDirection(const.gui.LEFT_TO_RIGHT)
-                alignment = const.gui.ALIGN_LEFT
+                alignment = const.gui.ALIGN_CENTER
             case _: 
                 raise ValueError(f"{titlePlacement} is not a valid value")
         
@@ -147,15 +159,21 @@ class TitledLineEdit(QFrame):
         titleLabel.setFont(titleFont)
         
         self._entry = QLineEdit()
-        self._entry.setStyleSheet(f"border: 2px solid black; background: {const.colors.DARK_PURPLE};")
+        self._entry.setStyleSheet(f"border: 2px solid black; background: {colors.DARK_PURPLE};")
         self._entry.setFixedWidth(width)
         self._entry.setFont(const.gui.DEFAULT_FONT)
 
+        mainLayout.addSpacing(padding[0])
         mainLayout.addWidget(titleLabel, alignment=titleAlignment)
         mainLayout.addSpacing(spacing)
-        if titlePlacement == 'side':
+        if titlePlacement == 'side' and center_stretch:
             mainLayout.addStretch()
+        if center_padding:
+            mainLayout.addSpacing(center_padding)
         mainLayout.addWidget(self._entry, alignment=alignment)
+        mainLayout.addSpacing(padding[1])
+        
+        self.signals.textChanged.connect(lambda: self._entry.textChanged.emit(self.getText()))
         
     def getText(self) -> str:
         '''Get the text from the LineEdit'''
@@ -170,13 +188,15 @@ class TitledLineEdit(QFrame):
         self._entry.setText("")
         self.clear_error()
 
-    def error(self) -> None:
+    def alert(self) -> None:
         '''Highlight the border red'''
-        self._entry.setStyleSheet(f"border: 2px solid red; background: {const.colors.DARK_PURPLE};")
+        self.alertActive = True
+        self._entry.setStyleSheet(f"border: 2px solid red; background: {colors.DARK_PURPLE};")
         
-    def clear_error(self) -> None:
+    def clearAlert(self) -> None:
         '''Remove the red border'''
-        self._entry.setStyleSheet(f"border: 2px solid black; background: {const.colors.DARK_PURPLE};")
+        self.alertActive = False
+        self._entry.setStyleSheet(f"border: 2px solid black; background: {colors.DARK_PURPLE};")
 
 class TitledLabel(QFrame):
     '''
@@ -210,7 +230,7 @@ class NoPadHBoxLayout(QHBoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        self.setAlignment(const.gui.ALIGN_TOP|const.gui.ALIGN_CENTER)
+        self.setAlignment(const.gui.ALIGN_CENTER)
         self.setContentsMargins(0,0,0,0)
         self.setSpacing(0)
         
@@ -219,7 +239,7 @@ class NoPadVBoxLayout(QVBoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        self.setAlignment(const.gui.ALIGN_TOP|const.gui.ALIGN_CENTER)
+        self.setAlignment(const.gui.ALIGN_CENTER)
         self.setContentsMargins(0,0,0,0)
         self.setSpacing(0)
 
@@ -238,35 +258,24 @@ class SingleCommandInputs(QFrame):
         self.signals = InputSignals()
         self._presetManager = control_manager
         
-        margin = 8
-        rootLayout = NoPadHBoxLayout()
-        rootLayout.setContentsMargins(margin,margin,margin,margin)
+        rootLayout = NoPadHBoxLayout() # Squishes it all together
         self.setLayout(rootLayout)
         
-        # ACTUAL WIDGET STARTS HERE
-        mainFrame = QFrame() # idk why i put a frame in a frame, but i dont wanna fix it right now. maybe later.
-        
         mainLayout = NoPadVBoxLayout()
-        mainFrame.setLayout(mainLayout)
         
         # Title
-        titleFont = QFont()
-        titleFont.setPointSize(const.gui.DEFAULT_FONT.pointSize()+5)
         title = QLabel(text="New Command")
-        title.setAlignment(const.gui.ALIGN_CENTER)
-        title.setFont(titleFont)
+        title.setFont(const.gui.CONTAINER_TITLE_FONT)
         
-        # Inputs
-        self._nicknameInput = TitledLineEdit(title="Nickname", titlePlacement='side')
-        self._keyInput = TitledLineEdit(title="Key", titlePlacement='side')
-        self._pressCmdInput = TitledLineEdit(title="Press Cmd", titlePlacement='side')
-        self._holdCmdInput = TitledLineEdit(title="Hold Cmd", titlePlacement='side')
-        self._probInput = TitledLineEdit(title="Probability (0-100)", titlePlacement='side')
+        # Input Widgets
+        centerStretch = True
+        self._nicknameInput = TitledLineEdit(title="Nickname", titlePlacement='side', center_stretch=centerStretch)
+        self._keyInput = TitledLineEdit(title="Key", titlePlacement='side', center_stretch=centerStretch)
+        self._pressCmdInput = TitledLineEdit(title="Press Cmd", titlePlacement='side', center_stretch=centerStretch)
+        self._holdCmdInput = TitledLineEdit(title="Hold Cmd", titlePlacement='side', center_stretch=centerStretch)
+        self._probInput = TitledLineEdit(title="Probability (0-100)", titlePlacement='side', center_stretch=centerStretch)
         
-        # Buttons
-        # styleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 20px; background: {const.colors.DARK_PURPLE}"
-        
-        
+        # Button Layout
         buttonLayout = NoPadHBoxLayout()
         self._clearButton = QPushButton(text="Clear")
         self._addButton = QPushButton(text="Add")
@@ -275,7 +284,7 @@ class SingleCommandInputs(QFrame):
         buttonLayout.addWidget(self._addButton)
         
         spacing = 10
-        mainLayout.addWidget(title)
+        mainLayout.addWidget(title, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(30)
         mainLayout.addWidget(self._nicknameInput)
         mainLayout.addSpacing(spacing)
@@ -289,9 +298,8 @@ class SingleCommandInputs(QFrame):
         mainLayout.addSpacing(spacing)
         mainLayout.addLayout(buttonLayout)
         
-        
         rootLayout.addStretch()
-        rootLayout.addWidget(mainFrame)
+        rootLayout.addLayout(mainLayout)
         rootLayout.addStretch()
         
         self._addButton.clicked.connect(self.add)
@@ -343,11 +351,11 @@ class SingleCommandInputs(QFrame):
             return None
         
         return {
-            NICKNAME: self._nicknameInput.getText().lower(),
-            KEY: self._keyInput.getText().lower(),
-            PRESS: self._pressCmdInput.getText().lower(),
-            HOLD: self._holdCmdInput.getText().lower(),
-            PROBABILITY: prob
+            strs.NICKNAME: self._nicknameInput.getText().lower(),
+            strs.KEY: self._keyInput.getText().lower(),
+            strs.PRESS: self._pressCmdInput.getText().lower(),
+            strs.HOLD: self._holdCmdInput.getText().lower(),
+            strs.PROBABILITY: prob
         }
     
     def clear_inputs(self) -> None:
@@ -366,11 +374,11 @@ class SingleCommandInputs(QFrame):
         if not inputs:
             return
         cmd = {
-            inputs[NICKNAME]: {
-                KEY: inputs[KEY],
-                PRESS: inputs[PRESS],
-                HOLD: inputs[HOLD],
-                PROBABILITY: inputs[PROBABILITY]
+            inputs[strs.NICKNAME]: {
+                strs.KEY: inputs[strs.KEY],
+                strs.PRESS: inputs[strs.PRESS],
+                strs.HOLD: inputs[strs.HOLD],
+                strs.PROBABILITY: inputs[strs.PROBABILITY]
             }
         }
         
@@ -378,10 +386,10 @@ class SingleCommandInputs(QFrame):
         if not presetName:
             name, ok = QInputDialog.getText(self, "New Preset Name",'Give preset name. If not, no save.', QLineEdit.Normal, "")
             if ok and name:
-                cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=SINGLE)
+                cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=strs.SINGLE)
                 self._presetManager.add_preset(name)
         else:
-            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=SINGLE)
+            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=strs.SINGLE)
         
         newCmd = SingleCommand(cmd=cmd)
         self.signals.addCommand.emit(newCmd)
@@ -398,19 +406,21 @@ class ComboCommandInputs(QFrame):
     def __init__(self, control_manager: ControlManager, parent=None):
         super().__init__(parent)
         self._presetManager = control_manager
+        self.signals = InputSignals()
+        
         mainLayout = NoPadVBoxLayout()
         self.setLayout(mainLayout)
         
-        self.signals = InputSignals()
-        
-        titleFont = QFont()
-        titleFont.setPointSize(const.gui.DEFAULT_FONT.pointSize()+5)
         title = QLabel("New Combo Command")
-        title.setAlignment(const.gui.ALIGN_CENTER)
-        title.setFont(titleFont)
+        title.setFont(const.gui.CONTAINER_TITLE_FONT)
         
-        self._nicknameInput = TitledLineEdit(title='Nickname', titlePlacement='side', spacing=22)
+        # Input Widgets
+        self._nicknameInput = TitledLineEdit(title='Nickname', titlePlacement='side', spacing=22, padding=(88,0), center_padding=30)
+        self._pressInput = TitledLineEdit(title='Press Cmd', titlePlacement='side', spacing=22, padding=(81,0), center_padding=30)
+        self._holdInput = TitledLineEdit(title='Hold Cmd', titlePlacement='side', spacing=22, padding=(88,0), center_padding=30)
+        self._probInput = TitledLineEdit(title='Probability (0-100)', titlePlacement='side', spacing=22, padding=(70,0), center_padding=0)
         
+        # Key1/Key2 Layout
         keyLayout = NoPadHBoxLayout()
         self._key1Input = TitledLineEdit(title="Key 1", titlePlacement='side')
         self._key2Input = TitledLineEdit(title="Key 2", titlePlacement='side')
@@ -420,11 +430,7 @@ class ComboCommandInputs(QFrame):
         keyLayout.addWidget(self._key2Input)
         keyLayout.addStretch()
         
-        self._pressInput = TitledLineEdit(title='Press Cmd', titlePlacement='side', spacing=15, titleAlignment='right')
-        self._holdInput = TitledLineEdit(title='Hold Cmd', titlePlacement='side', spacing=22, titleAlignment='right')
-        self._probInput = TitledLineEdit(title='Probability', titlePlacement='side', spacing=14, titleAlignment='right')
-        
-        # Buttons
+        # Buttons Layout
         buttonLayout = NoPadHBoxLayout()
         self._clearButton = QPushButton(text="Clear")
         self._clearButton.setStyleSheet("font-size: 15px;")
@@ -435,20 +441,19 @@ class ComboCommandInputs(QFrame):
         buttonLayout.addWidget(self._addButton)
         
         spacing = 10
-        mainLayout.addWidget(title)
+        mainLayout.addWidget(title, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(30)
-        mainLayout.addWidget(self._nicknameInput, alignment=const.gui.ALIGN_CENTER)
-        mainLayout.addSpacing(spacing)
-        mainLayout.addLayout(keyLayout)
+        mainLayout.addWidget(self._nicknameInput)
         mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._pressInput, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._holdInput, alignment=const.gui.ALIGN_CENTER)
         mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._probInput, alignment=const.gui.ALIGN_CENTER)
+        mainLayout.addSpacing(spacing)
+        mainLayout.addLayout(keyLayout)
         mainLayout.addSpacing(20)
         mainLayout.addLayout(buttonLayout)
-        mainLayout.addStretch()
         
         self._clearButton.clicked.connect(self.clear_inputs)
         self._addButton.clicked.connect(self.add)
@@ -476,24 +481,24 @@ class ComboCommandInputs(QFrame):
             prob = 100
             
         return {
-            NICKNAME: self._nicknameInput.getText().lower(),
-            KEY1: self._key1Input.getText().lower(),
-            KEY2: self._key2Input.getText().lower(),
-            PRESS: self._pressInput.getText().lower(),
-            HOLD: self._holdInput.getText().lower(),
-            PROBABILITY: prob
+            strs.NICKNAME: self._nicknameInput.getText().lower(),
+            strs.KEY1: self._key1Input.getText().lower(),
+            strs.KEY2: self._key2Input.getText().lower(),
+            strs.PRESS: self._pressInput.getText().lower(),
+            strs.HOLD: self._holdInput.getText().lower(),
+            strs.PROBABILITY: prob
         }
     
     def add(self) -> None:
         '''This prepares the command to be added by creating the widget'''
         inputs = self.get_inputs()
         cmd = {
-            inputs[NICKNAME]: {
-                KEY1: inputs[KEY1],
-                KEY2: inputs[KEY2],
-                PRESS: inputs[PRESS],
-                HOLD: inputs[HOLD],
-                PROBABILITY: inputs[PROBABILITY]
+            inputs[strs.NICKNAME]: {
+                strs.KEY1: inputs[strs.KEY1],
+                strs.KEY2: inputs[strs.KEY2],
+                strs.PRESS: inputs[strs.PRESS],
+                strs.HOLD: inputs[strs.HOLD],
+                strs.PROBABILITY: inputs[strs.PROBABILITY]
             }
         }
         
@@ -501,15 +506,16 @@ class ComboCommandInputs(QFrame):
         if not presetName:
             name, ok = QInputDialog.getText(self, "New Preset Name",'Give preset name. If not, no save.', QLineEdit.Normal, "")
             if ok and name:
-                cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=COMBO)
+                cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=strs.COMBO)
                 self._presetManager.add_preset(name)
         else:
-            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=COMBO)
+            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=strs.COMBO)
         
         newCmd = ComboCommand(cmd=cmd)
         self.signals.addCommand.emit(newCmd)
         self.clear_inputs()
 
+# Commands
 class SingleCommand(QFrame):
     '''
     This widget is a container for the info about the command
@@ -525,10 +531,10 @@ class SingleCommand(QFrame):
         self.setLayout(mainLayout)
         
         self.nickname = list(cmd.keys())[0]
-        key = cmd[self.nickname][KEY]
-        pressCmd = cmd[self.nickname][PRESS]
-        holdCmd = cmd[self.nickname][HOLD]
-        prob = cmd[self.nickname][PROBABILITY]
+        key = cmd[self.nickname][strs.KEY]
+        pressCmd = cmd[self.nickname][strs.PRESS]
+        holdCmd = cmd[self.nickname][strs.HOLD]
+        prob = cmd[self.nickname][strs.PROBABILITY]
         
         # Nickname
         nicknameLayout = NoPadHBoxLayout()
@@ -548,7 +554,7 @@ class SingleCommand(QFrame):
                 QPushButton:hover {
                     background: %s    
                 }
-        """ % const.colors.DARK_PURPLE)
+        """ % colors.DARK_PURPLE)
         self.trashButton.setIcon(QIcon(trashIcon))
         
         nicknameLayout.addWidget(nicknameLabel)
@@ -593,11 +599,11 @@ class ComboCommand(QFrame):
         self.setLayout(mainLayout)
         
         self.nickname = list(cmd.keys())[0]
-        key1 = cmd[self.nickname][KEY1]
-        key2 = cmd[self.nickname][KEY2]
-        pressCmd = cmd[self.nickname][PRESS]
-        holdCmd = cmd[self.nickname][HOLD]
-        prob = cmd[self.nickname][PROBABILITY]
+        key1 = cmd[self.nickname][strs.KEY1]
+        key2 = cmd[self.nickname][strs.KEY2]
+        pressCmd = cmd[self.nickname][strs.PRESS]
+        holdCmd = cmd[self.nickname][strs.HOLD]
+        prob = cmd[self.nickname][strs.PROBABILITY]
         
         # Nickname
         nicknameLayout = NoPadHBoxLayout()
@@ -617,7 +623,7 @@ class ComboCommand(QFrame):
                 QPushButton:hover {
                     background: %s    
                 }
-        """ % const.colors.DARK_PURPLE)
+        """ % colors.DARK_PURPLE)
         self.trashButton.setIcon(QIcon(trashIcon))
         
         nicknameLayout.addWidget(nicknameLabel)
@@ -652,21 +658,30 @@ class ControlManager(QFrame):
     '''This is where all the preset controls, import/export and start/stop'''
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._executor = KeypressExecutor()
-        self._executor.moveToThread(EXEC_THREAD)
-        EXEC_THREAD.started.connect(self._executor.run)
         self.signals = ManagerSignals()
+        self._twitchManager = TwitchManager(channel_name=SETTINGS[strs.CHANNEL_NAME])
+        
+        self._twitchManager.moveToThread(EXEC_THREAD)
+        EXEC_THREAD.started.connect(self._twitchManager.start_listening)
+        EXEC_THREAD.start()
+        
+        # UI
         mainLayout = NoPadVBoxLayout()
         self.setLayout(mainLayout)
+        
+        channelFont = QFont(const.gui.DEFAULT_FONT_FAMILY, pointSize=15)
+        self._channelInput = TitledLineEdit(title="Twitch Channel", titlePlacement='top',
+                                            titleAlignment=const.gui.ALIGN_CENTER, titleFont=channelFont)
+        if SETTINGS[strs.CHANNEL_NAME]:
+            self._channelInput.setText(SETTINGS[strs.CHANNEL_NAME])
         
         self._presetDropdown = TitledDropdown(title='Preset', titlePlacement='top')
         for name in PRESETS:
             self._presetDropdown.addItem(name)
         self._presetDropdown.setCurrentIndex(-1)
         
-        presetButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 86px; height: 20px; background: {const.colors.DARK_PURPLE};"
-        playButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 40px; background: {const.colors.DARK_PURPLE};"
-        stopButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 40px; background: {const.colors.RED};"
+        presetButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 86px; height: 20px; background: {colors.DARK_PURPLE};"
+        stopButtonStyleSheet = f"font-size: 15px; border: 2px solid black; width: 100px; height: 40px; background: {colors.RED};"
         
         self._newButton = QPushButton(text='New')
         self._newButton.setStyleSheet(presetButtonStyleSheet)
@@ -698,13 +713,15 @@ class ControlManager(QFrame):
         self._playLayout.setCurrentWidget(self._playButton)
         
         # Main Layout
-        mainLayout.addSpacing(50)
+        mainLayout.addSpacing(10)
+        mainLayout.addWidget(self._channelInput)
+        mainLayout.addSpacing(40)
         mainLayout.addWidget(self._presetDropdown)
         mainLayout.addSpacing(10)
         mainLayout.addLayout(buttonLayout)
         mainLayout.addSpacing(10)
         mainLayout.addLayout(importLayout)
-        mainLayout.addSpacing(50)
+        mainLayout.addSpacing(10)
         mainLayout.addLayout(self._playLayout)
         
         self._newButton.clicked.connect(self.new_preset)
@@ -714,6 +731,11 @@ class ControlManager(QFrame):
         self._importButton.clicked.connect(self.import_presets)
         self._playButton.clicked.connect(self.play)
         self._stopButton.clicked.connect(self.stop)
+        self._channelInput.signals.textChanged.connect(self.set_channel_name)
+        self._twitchManager.signals.noPreset.connect(lambda: self.alert("preset"))
+        self._twitchManager.signals.noChannel.connect(lambda: self.alert("channel"))
+        self._twitchManager.signals.clearPresetAlert.connect(lambda: self.clear_alert("preset"))
+        self._twitchManager.signals.clearChannelAlert.connect(lambda: self.clear_alert("channel"))
         
     def get_preset(self) -> str:
         '''Get the current preset from the dropdown'''
@@ -729,7 +751,10 @@ class ControlManager(QFrame):
         self._presetDropdown.addItem(name)
         self._presetDropdown.setCurrentText(name)
         self.signals.clearContainer.emit()
-        
+    
+    def set_channel_name(self, name: str) -> None:
+        self._twitchManager.set_channel_name(name)
+    
     @Slot()
     def new_preset(self) -> None:
         '''Create a popup that prompts for the new preset name'''
@@ -779,23 +804,41 @@ class ControlManager(QFrame):
             else:
                 return
 
+    @Slot()
     def play(self) -> None:
         '''Start the thread for listening and sending commands'''
-        self._playLayout.setCurrentWidget(self._stopButton)
+
+        if not self._twitchManager.channelName:
+            self._twitchManager.set_channel_name(self._channelInput.getText())
+        if not self._twitchManager.channelName == SETTINGS[strs.CHANNEL_NAME]:
+            cfg.update_setting(setting=strs.CHANNEL_NAME, value=self._twitchManager.channelName)
+            
         preset = self._presetDropdown.getCurrentText()
-        self._executor.set_preset(preset)
-        if not TWITCH.is_connected():
-            TWITCH.connect(channel_name=SETTINGS[CHANNEL_NAME])
-        
-        if not self._executor.isStarted:
-            EXEC_THREAD.start()
+        self._twitchManager.set_preset(preset)
+        resumeSuccess = self._twitchManager.resume()
+        if resumeSuccess:
+            self._playLayout.setCurrentWidget(self._stopButton)
         else:
-            self._executor.resume()
+            return
     
     def stop(self) -> None:
         '''Stop the thread for listening and sending commands'''
         self._playLayout.setCurrentWidget(self._playButton)
-        self._executor.pause()
+        self._twitchManager.pause()
+
+    def alert(self, alert: Literal['preset', 'channel']) -> None:
+        match alert:
+            case 'preset':
+                self._presetDropdown.alert()
+            case 'channel':
+                self._channelInput.alert()
+
+    def clear_alert(self, alert: Literal['preset', 'channel']) -> None:
+        match alert:
+            case 'preset':
+                self._presetDropdown.clearAlert()
+            case 'channel':
+                self._channelInput.clearAlert()
 
 # Containers 
 class CommandContainer(QFrame):
@@ -891,7 +934,7 @@ class CommandContainer(QFrame):
                 widget.deleteLater()
         self._widgetCache.clear()
         self._existingNicknames.clear()
-            
+
 # Signals 
 class ManagerSignals(QObject):
     fillContainer = Signal(str)

@@ -4,7 +4,7 @@ import sys
 
 
 
-CHANNEL_NAME = 'bonkary'
+CHANNEL_NAME = 'Jynxzi'
 
 twitch = Twitch()
 twitch.set_channel_name(CHANNEL_NAME)

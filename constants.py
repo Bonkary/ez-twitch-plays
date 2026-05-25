@@ -4,32 +4,35 @@ from pathlib import Path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QBoxLayout
-from platform_connection import Twitch
-import dotenv
 
-# DOTENV
-dotenvPath = os.path.join(os.path.dirname(__file__), '.env')
-dotenv.load_dotenv(dotenvPath)
+@dataclass
+class strs:
+    KEY = 'key'
+    KEY1 = 'key1'
+    KEY2 = 'key2'
+    COMMAND = 'command'
+    PRESS = 'press'
+    HOLD = 'hold'
+    PROBABILITY = 'probability'
+    NICKNAME = 'nickname'
+    SINGLE = 'single'
+    COMBO = 'combo'
+    EXPORT = 'export'
+    CLIPBOARD = 'clipboard'
+    SAVE = 'save'
+    PREV_SAVE_PATH = 'save_path'
+    CHANNEL_NAME = 'channel_name'
+    VALID_CMDS = 'valid_cmds'
 
-TWITCH = Twitch()
-
-# Common Strings
-KEY = 'key'
-KEY1 = 'key1'
-KEY2 = 'key2'
-COMMAND = 'command'
-PRESS = 'press'
-HOLD = 'hold'
-PROBABILITY = 'probability'
-NICKNAME = 'nickname'
-SINGLE = 'single'
-COMBO = 'combo'
-EXPORT = 'export'
-CLIPBOARD = 'clipboard'
-SAVE = 'save'
-PREV_SAVE_PATH = 'save_path'
-CHANNEL_NAME = 'channel_name'
-VALID_CMDS = 'valid_cmds'
+@dataclass
+class colors:
+    DEFAULT_TEXT = 'white' # also maybe #F9F871'
+    PURPLE = '#5C3B99'
+    DARK_PURPLE = '#4c3080'
+    GREEN = 'green'
+    RED = '#AD0F00'
+    BLACK = 'black'
+    WHITE = 'white'
 
 @dataclass
 class const:
@@ -40,7 +43,9 @@ class const:
         MAIN_WINDOW_SIZE = QSize(1500,1000)
         DEFAULT_FONT_FAMILY = "Arial"
         DEFAULT_FONT = QFont(DEFAULT_FONT_FAMILY, pointSize=13)
+        
         TITLE_FONT = QFont(DEFAULT_FONT_FAMILY, pointSize=20)
+        CONTAINER_TITLE_FONT = QFont(DEFAULT_FONT_FAMILY, pointSize=DEFAULT_FONT.pointSize()+5)
         
         ALIGN_CENTER = Qt.AlignmentFlag.AlignCenter
         ALIGN_LEFT = Qt.AlignmentFlag.AlignLeft
@@ -54,16 +59,6 @@ class const:
         BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
         
         EXPORT_WINDOW_SIZE = QSize(300,600)
-        
-    @dataclass
-    class colors:
-        DEFAULT_TEXT = 'white' # also maybe #F9F871'
-        TWITCH_PURPLE = '#5C3B99'
-        DARK_PURPLE = '#4c3080'
-        GREEN = 'green'
-        RED = '#AD0F00'
-        BLACK = 'black'
-        WHITE = 'white'
 
 @dataclass
 class dirs:
@@ -77,7 +72,10 @@ class files:
     PRESETS = os.path.join(dirs.ROOT, 'config', 'presets.json')
     SETTINGS = os.path.join(dirs.CONFIG, 'settings.json')
 
-
+@dataclass
+class stylesheets:
+    DROPDOWN_ALERT = "QComboBox { padding-left: 5px; border-color: %s}" % colors.RED
+    DROPDOWN = "QComboBox { padding-left: 5px; border-color: %s}" % colors.BLACK
 
 
 
