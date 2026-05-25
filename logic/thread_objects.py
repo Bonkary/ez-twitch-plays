@@ -7,6 +7,7 @@ import random
 from typing import Literal
 from constants import *
 
+
 THREAD_POOL = QThreadPool.globalInstance()
 EXEC_THREAD = QThread()
 

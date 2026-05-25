@@ -3,6 +3,9 @@ import json
 import sys
 from constants import *
 from typing import Literal, Any
+import dotenv
+
+
 
 # OPERATIONS
 def create_preset(preset_name: dict, cmd: dict = None, cmd_type: Literal['single', 'combo'] | None = None) -> None:

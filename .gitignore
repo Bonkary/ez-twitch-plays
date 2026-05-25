@@ -8,6 +8,6 @@ mapping.json
 old/
 .vscode/
 *.json
-
+.env
 
 

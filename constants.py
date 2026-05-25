@@ -5,6 +5,11 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QBoxLayout
 from platform_connection import Twitch
+import dotenv
+
+# DOTENV
+dotenvPath = os.path.join(os.path.dirname(__file__), '.env')
+dotenv.load_dotenv(dotenvPath)
 
 TWITCH = Twitch()
 
@@ -28,6 +33,8 @@ VALID_CMDS = 'valid_cmds'
 
 @dataclass
 class const:
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    CLIENT_ID = os.environ.get("CLIENT_ID")
     @dataclass
     class gui:
         MAIN_WINDOW_SIZE = QSize(1500,1000)
