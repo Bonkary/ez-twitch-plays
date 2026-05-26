@@ -94,7 +94,26 @@ class stylesheets:
                     background: %s    
                 }
         """ % colors.DARK_PURPLE
-
+    MAIN_WINDOW = """
+            QPushButton {
+                font-size: 15px;
+                border: 2px solid black;
+                width: 100px;
+                height: 20px;
+                background: %s;
+            }
+            QPushButton:hover {
+                background: %s;
+            }
+            QComboBox {
+                border: 2px solid black;
+                background: %s;
+            }
+            QLabel {
+                color: %s;
+            }
+        """ % (colors.DARK_PURPLE, colors.PURPLE, colors.DARK_PURPLE, colors.DEFAULT_TEXT)
+    
 @dataclass
 class dialog:
     @dataclass

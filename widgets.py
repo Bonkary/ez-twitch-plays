@@ -13,9 +13,6 @@ import popups
 import time
 from thread_objects import TwitchManager, EXEC_THREAD
 
-class WidgetSignals(QObject):
-    textChanged = Signal()
-
 # General 
 class TitledDropdown(QFrame):
     '''
@@ -635,8 +632,8 @@ class SingleCommand(QFrame):
         #   Nickname Layout
         nicknameLayout = NoPadHBoxLayout()
         nicknameLayout.addWidget(nicknameLabel)
-        nicknameLayout.addSpacing(10)
         nicknameLayout.addWidget(self.trashButton)
+        nicknameLayout.addSpacing(50)
         
         #   Main Layout
         mainLayout.addLayout(nicknameLayout)
@@ -778,6 +775,7 @@ class ControlManager(QFrame):
         self._newButton.clicked.connect(self.new_preset)
         self._exportButton.clicked.connect(self.create_export_window)
         self._presetDropdown.signals.textChanged.connect(lambda: self.signals.fillContainer.emit(self._presetDropdown.getCurrentText()))
+        self._presetDropdown.signals.textChanged.connect(self._presetDropdown.clearAlert)
         self._deleteButton.clicked.connect(self.delete)
         self._importButton.clicked.connect(self.import_presets)
         self._playButton.clicked.connect(self.play)
@@ -863,6 +861,11 @@ class ControlManager(QFrame):
             self._twitchManager.set_channel_name(self._channelInput.getText())
         if not self._twitchManager.channelName == SETTINGS[strs.CHANNEL_NAME]:
             cfg.update_setting(setting=strs.CHANNEL_NAME, value=self._twitchManager.channelName)
+            
+        if self._presetDropdown.alertActive:
+            self._presetDropdown.clearAlert()
+        if self._channelInput.alertActive:
+            self._channelInput.clearAlert()
             
         preset = self._presetDropdown.getCurrentText()
         self._twitchManager.set_preset(preset)
@@ -1003,3 +1006,5 @@ class DropwdownSignals(QObject):
 class ContainerSignals(QObject):
     clearContainer = Signal()      
         
+class WidgetSignals(QObject):
+    textChanged = Signal()
