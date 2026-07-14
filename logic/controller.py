@@ -9,8 +9,8 @@ def hold_key(key: str, *, duration: int = keys.const.HOLD_DURATION) -> None:
     Holds down the key for a certain interval.
     
     Arguments:
-           key - The key to press down
-      duration - How long you want the key pressed for
+        key - The key to press down
+        duration - How long you want the key pressed for
     '''
     print("sup")
     if pydirectinput.is_valid_key(key):
@@ -35,7 +35,7 @@ def press_combo_key(*, keys: tuple) -> None:
     Press 2 buttons at the same time.
     
     Arguments:
-        key - The keys to be pressed
+        keys - The keys to be pressed
     '''
     press_key(keys[0])
     press_key(keys[1])
@@ -54,7 +54,7 @@ def hold_combo_key(*, keys: (tuple), duration: int = keys.const.HOLD_DURATION) -
 
 # COMING SOON (maybe)
 def left_click_mouse() -> None:
-    pass
+    raise NotImplementedError("left_click_mouse is yet to be implemented...")
 
 def move_mouse(*, axis: Literal['x', 'y', 'xy'], distance: int, duration: int = 3) -> None:
     '''
@@ -65,4 +65,4 @@ def move_mouse(*, axis: Literal['x', 'y', 'xy'], distance: int, duration: int = 
        distance - The amount you want to move the mouse.
        duration - How long you want it to take to get to the destination.
     '''
-    pass
+    raise NotImplementedError("left_click_mouse is yet to be implemented...")

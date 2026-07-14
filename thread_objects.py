@@ -1,5 +1,6 @@
-from PySide6.QtCore import QThread, QThreadPool, QRunnable, QObject, Slot, Signal, QEvent
-# import logic.controller as cntrls
+from PySide6.QtCore import QRunnable, QObject, Slot, Signal, QEvent
+if not ON_MAC:
+    import logic.controller as cntrls
 from typing import Literal
 from constants import *
 from platform_connections import Twitch
@@ -8,10 +9,15 @@ import random
 from threading import Event
 import logic.controller as cntrl
 
-THREAD_POOL = QThreadPool.globalInstance()
-EXEC_THREAD = QThread()
 
-def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str, int]:
+def get_key(preset_name: str, chat_cmd: str) -> tuple[str, str, int | tuple, str, int]:
+    '''
+    Get the key to be pressed based on the chat command.
+    
+    Arguments:
+        preset_name - The name of the Preset to look into.
+        chat_cmd - The chat message of the command.
+    '''
     preset: dict = PRESETS[preset_name]
     singles: list[dict] = preset[strs.SINGLE]
     combos: list[dict] = preset[strs.COMBO]
@@ -23,11 +29,11 @@ def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str,
         nickname = list(cmd.keys())[0]
         pressCmd = cmd[nickname][strs.PRESS]
         holdCmd = cmd[nickname][strs.HOLD]
-        if message == pressCmd:
+        if chat_cmd == pressCmd:
             foundCmd = cmd[nickname]
             action = strs.PRESS
             break
-        elif message == holdCmd:
+        elif chat_cmd == holdCmd:
             foundCmd = cmd[nickname]
             action = strs.HOLD
             break
@@ -42,11 +48,11 @@ def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str,
             nickname = list(cmd.keys())[0]
             pressCmd = cmd[nickname][strs.PRESS]
             holdCmd = cmd[nickname][strs.HOLD]
-            if message == pressCmd:
+            if chat_cmd == pressCmd:
                 foundCmd = cmd[nickname]
                 action = strs.PRESS
                 break
-            elif message == holdCmd:
+            elif chat_cmd == holdCmd:
                 foundCmd = cmd[nickname]
                 action = strs.HOLD
                 break
@@ -59,13 +65,15 @@ def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str,
     return key, action, prob
 
 class KeyPressWorker(QRunnable):
+    '''Handles all of the key presses. This gets thrown into the QThreadPool'''
     def __init__(self, preset_name: str, cmd: str):
         super().__init__()
         self._presetName = preset_name
         self._cmd = cmd
         
     def run(self) -> None:
-        key, action, prob = get_key(preset_name=self._presetName, message=self._cmd)
+        '''Executes the key press after extracting what the key press should be.'''
+        key, action, prob = get_key(preset_name=self._presetName, chat_cmd=self._cmd)
         print(key, action, prob)
         if random.randint(1,100) <= prob:
             if type(key) == str:
@@ -87,7 +95,13 @@ class ManagerSignals(QObject):
     clearPresetAlert = Signal()
     clearChannelAlert = Signal()
 
-class TwitchManager(QObject):
+class TwitchPlaysManager(QObject):
+    '''
+    Manages all the communication with Twitch.
+    
+    Arguments:
+        channel_name - The name of the Twitch channel to connect to.
+    '''
     def __init__(self, channel_name: str, parent=None):
         super().__init__(parent)
         self._isKilled = False
@@ -100,14 +114,16 @@ class TwitchManager(QObject):
         self.channelName = channel_name
     
     def run(self) -> None:
+        '''Never stops listening for a new chat message.'''
         self._isStarted = True
         while not self._isKilled:
             self._twitch.listen(on_message=self.execute)
             
     def execute(self, message: str) -> None:
+        '''Creates the KeyPressWorker and throws it into the QThreadPool.'''
         if self._isPaused:
             return
-        print(message['message'])
+        print(message['message']) # DEV
         command = message['message']
         if command in PRESETS[self._presetName][strs.VALID_CMDS]:
             executor = KeyPressWorker(preset_name=self._presetName, cmd=command)

@@ -1,6 +1,10 @@
 import sys
 from PySide6.QtCore import Qt, Slot, Signal, QObject, QTimer
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QInputDialog, QGridLayout, QFileDialog, QStyle, QMessageBox, QStackedLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame, QHBoxLayout, QVBoxLayout, QLabel,
+    QComboBox, QLineEdit, QPushButton, QCheckBox,
+    QInputDialog, QGridLayout, QFileDialog, QStyle,
+    QMessageBox, QStackedLayout, QWidget, QMainWindow)
 from PySide6.QtGui import QPalette, QFont, QIcon
 from constants import *
 from typing import Literal, Any
@@ -11,10 +15,12 @@ import json
 import subprocess
 import popups
 import time
-from thread_objects import TwitchManager, EXEC_THREAD
+from thread_objects import TwitchPlaysManager
 
-# General
+# TODO: Slots and Signals decorating type shit. Gotta get that marginal performance boost that absolutely no one will ever notice.
+
 class CustomQWidget(QWidget):
+    '''This is just to get the background color set to a single line of code rather than 4 lol'''
     def __init__(self, parent=None):
         super().__init__(parent)
         
@@ -24,6 +30,18 @@ class CustomQWidget(QWidget):
         bg.setColor(self.backgroundRole(), color)
         self.setPalette(bg)
 
+class CustomQMainWindow(QMainWindow):
+    '''This is just to get the background color set to a single line of code rather than 4 lol'''
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+    def setBackgroundColor(self, color: str) -> None:
+        self.setAutoFillBackground(True)
+        bg = self.palette()
+        bg.setColor(self.backgroundRole(), color)
+        self.setPalette(bg)
+
+# General
 class TitledDropdown(QFrame):
     '''
     General Combobox that has a label to 'ID' it, I guess?
@@ -683,14 +701,11 @@ class ControlManager(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.signals = ManagerSignals()
-        self._twitchManager = TwitchManager(channel_name=SETTINGS[strs.CHANNEL_NAME])
+        self._twitchManager = TwitchPlaysManager(channel_name=SETTINGS[strs.CHANNEL_NAME])
         QTimer.singleShot(1000, EXEC_THREAD.start)
         
         self._twitchManager.moveToThread(EXEC_THREAD)
         EXEC_THREAD.started.connect(self._twitchManager.start_listening)
-        
-        cents = 0
-        dollars = 10
         
         # Widgets
         self._newButton = BasicPushButton(text='New')
@@ -722,9 +737,9 @@ class ControlManager(QFrame):
         
         #   Play/Stop
         self._playLayout = QStackedLayout()
-        self._playLayout.insertWidget(0, self._playButton)
-        self._playLayout.insertWidget(1, self._stopButton)
-        self._playLayout.setCurrentWidget(self._playButton)
+        self._playLayout.insertWidget(gui.index.PLAY_BUTTON, self._playButton)
+        self._playLayout.insertWidget(gui.index.STOP_BUTTON, self._stopButton)
+        self._playLayout.setCurrentIndex(gui.index.PLAY_BUTTON)
         
         #   Main Layout
         # mainLayout.addSpacing(10)

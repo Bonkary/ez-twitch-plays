@@ -1,9 +1,17 @@
 from dataclasses import dataclass
 import os
 from pathlib import Path
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QThread, QThreadPool
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QBoxLayout
+from threading import Event
+
+THREAD_POOL = QThreadPool.globalInstance()
+EXEC_THREAD = QThread()
+
+KILL_THREADS_FLAG = Event()
+
+ON_MAC = True
 
 @dataclass
 class strs:
@@ -38,6 +46,10 @@ class colors:
 
 @dataclass
 class gui:
+    @dataclass
+    class index: # Stacked Layouts
+        PLAY_BUTTON = 0
+        STOP_BUTTON = 1
     MAIN_WINDOW_SIZE = QSize(1700,900)
     
     ALIGN_CENTER = Qt.AlignmentFlag.AlignCenter

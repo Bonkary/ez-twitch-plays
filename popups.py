@@ -11,6 +11,7 @@ import json
 import subprocess
 
 class Export(QDialog):
+    '''Dialog window to choose how to export a Preset.'''
     def __init__(self, parent=None):
         super().__init__(parent)
         self._checkboxes: list[QCheckBox] = []
@@ -65,15 +66,17 @@ class Export(QDialog):
         # Connections
         exportButton.clicked.connect(self.export)
         self._clipboardCheckbox.stateChanged.connect(self.update_clipboard_setting)
-        self._selectAllCheckbox.stateChanged.connect(self.select_all)
+        self._selectAllCheckbox.stateChanged.connect(self.select_all_toggle)
         self._saveCheckbox.stateChanged.connect(self.update_save_setting)
     
-    def select_all(self) -> None:
+    def select_all_toggle(self) -> None:
+        '''Checks/unchecks all the checkboxes of Presets.'''
         state = self._selectAllCheckbox.checkState()
         for checkbox in self._checkboxes:
             checkbox.setCheckState(state)
     
     def update_save_setting(self) -> None:
+        '''Save the last used export settings.'''
         saveState = self._saveCheckbox.checkState()
         if saveState == Qt.CheckState.Checked and not SETTINGS[strs.EXPORT][strs.SAVE] == True:
             cfg.update_setting(setting=strs.SAVE, value=True)
@@ -81,13 +84,21 @@ class Export(QDialog):
             cfg.update_setting(setting=strs.SAVE, value=False)
     
     def update_clipboard_setting(self) -> None:
+        '''Update the copy-to-clipboard setting'''
         clipboardState = self._clipboardCheckbox.checkState()
         if clipboardState == Qt.CheckState.Checked and not SETTINGS[strs.EXPORT][strs.CLIPBOARD] == True:
             cfg.update_setting(setting=strs.CLIPBOARD, value=True)
         elif clipboardState == Qt.CheckState.Unchecked and not SETTINGS[strs.EXPORT][strs.CLIPBOARD] == False:
             cfg.update_setting(setting=strs.CLIPBOARD, value=False)
     
-    def export(self) -> None:        
+    def export(self) -> None:
+        '''
+        Export the selected Presets.
+        
+        If the user selects to save the file, it will.
+        If the user selected to copy the file to their clipboard, it will.
+        If both are selected, it will.
+        '''   
         toExport = []
         for checkbox in self._checkboxes:
             isChecked = checkbox.checkState()

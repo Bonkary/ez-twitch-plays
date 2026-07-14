@@ -3,11 +3,11 @@ from PySide6.QtGui import QPalette
 import widgets as wdgts
 from constants import *
 import sys
-from thread_objects import EXEC_THREAD
-from platform_connections import KILLER
 import time
 
-class MainWindow(QMainWindow):
+# NOTE: anywhere you see '# DEV' that just means its for development reasons only. It's not intended to stay forever.
+
+class MainWindow(wdgts.CustomQMainWindow):
     '''Main Window to hold everything'''
     def __init__(self):
         super().__init__()
@@ -16,10 +16,7 @@ class MainWindow(QMainWindow):
         self.setFixedSize(gui.MAIN_WINDOW_SIZE)
         self.setWindowTitle("Ez Twitch Plays")
         
-        self.setAutoFillBackground(True)
-        bg = self.palette()
-        bg.setColor(self.backgroundRole(), colors.PURPLE)
-        self.setPalette(bg)
+        self.setBackgroundColor(colors.PURPLE)
         
         rootLayout = wdgts.NoPadHBoxLayout()
         self.setLayout(rootLayout)
@@ -31,10 +28,12 @@ class MainWindow(QMainWindow):
 
     def exit(self) -> None:
         self._twitchPlays._controlManager._twitchManager.close()
-        KILLER.kill()
-        time.sleep(1)
-        EXEC_THREAD.terminate()
-        sys.exit(0)
+        KILL_THREADS_FLAG.set()
+        time.sleep(1) # Allow some time fo
+        EXEC_THREAD.requestInterruption()
+        EXEC_THREAD.quit()
+        if THREAD_POOL.activeThreadCount() > 0:
+            THREAD_POOL.waitForDone()
 
 class TwitchPlays(wdgts.CustomQWidget):
     '''Primary widget for the app'''
