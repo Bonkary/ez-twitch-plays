@@ -12,7 +12,6 @@ import configurations as cfg
 import json
 import popups
 from thread_objects import TwitchPlaysManager
-import warnings
 
 # TODO: Slots and Signals decorating type shit. Gotta get that marginal performance boost that absolutely no one will ever notice.
 
@@ -285,14 +284,15 @@ class BasicLabel(QLabel):
         width - The value of the width.
     '''
     def __init__(self, text: str = None, *, font: QFont = fonts.DEFAULT,
-                 alignment: Qt.AlignmentFlag = gui.ALIGN_CENTER, underline: bool = False,
-                 stylesheet: str = None, width: int = None, bold: bool = False):
+                 alignment: Qt.AlignmentFlag = gui.ALIGN_CENTER, underline: bool | None = None,
+                 stylesheet: str = None, width: int = None, bold: bool | None = None):
         super().__init__(parent=None, text=text)
         
-        font = QFont(font)
-        if font.isCopyOf(fonts.DEFAULT):
-            font.setUnderline(underline)
+        font = QFont(font) # Create copy so any constants dont get changed lol
+        if not bold == None:
             font.setBold(bold)
+        if not underline == None:
+            font.setUnderline(underline)
         self.setFont(font)
             
         self.setAlignment(alignment)
@@ -300,7 +300,9 @@ class BasicLabel(QLabel):
             self.setFixedWidth(width)
         if stylesheet:
             self.setStyleSheet(stylesheet)
-
+        
+        
+        
 class BasicPushButton(QPushButton):
     '''
     QPushButton but you can create/config it with less lines of code.
@@ -1193,13 +1195,46 @@ class HelpCommands(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        titleLabel = BasicLabel("Adding Commands", font=fonts.TITLE, underline=True)
+        fieldsText = BasicLabel("\n".join(dialog.help.COMMANDS), alignment=gui.ALIGN_LEFT, font=fonts.HELP_TEXT)
+        
+        mainLayout = NoPadVBoxLayout()
+        mainLayout.addStretch()
+        mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
+        mainLayout.addSpacing(50)
+        mainLayout.addWidget(fieldsText)
+        
+        self.setLayout(mainLayout)
+    
 class HelpPresets(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        titleLabel = BasicLabel("What are Presets?", font=fonts.TITLE, underline=True)
+        text = BasicLabel("\n".join(dialog.help.PRESETS), font=fonts.HELP_TEXT)
+        
+        mainLayout = NoPadVBoxLayout()
+        mainLayout.addWidget(titleLabel)
+        mainLayout.addSpacing(50)
+        mainLayout.addWidget(text)
+        
+        self.setLayout(mainLayout)
+        
 class HelpPlay(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        titleLabel = BasicLabel("How Do I Play?", font=fonts.TITLE, underline=True)
+        text = BasicLabel("\n".join(dialog.help.PLAY), font=fonts.HELP_TEXT)
+        
+        mainLayout = NoPadVBoxLayout()
+        mainLayout.addStretch()
+        mainLayout.addWidget(titleLabel)
+        mainLayout.addSpacing(50)
+        mainLayout.addWidget(text)
+        mainLayout.addStretch()
+        
+        self.setLayout(mainLayout)
 
 # Signals 
 class ManagerSignals(QObject):

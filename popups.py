@@ -161,6 +161,7 @@ class Help(CustomQDialog):
         self.stackedLayout.setCurrentIndex(gui.index.HELP_SELECTION)
         
         mainLayout = wdgts.NoPadVBoxLayout()
+        mainLayout.addStretch()
         mainLayout.addLayout(self.stackedLayout)
         mainLayout.addSpacing(30)
         mainLayout.addWidget(self._backButton, alignment=gui.ALIGN_CENTER)

@@ -20,10 +20,9 @@ def create_font(*, family: str, point_size: int = 15, bold: bool = False, underl
 
 THREAD_POOL = QThreadPool.globalInstance()
 EXEC_THREAD = QThread()
-
 KILL_THREADS_FLAG = Event()
 
-ON_MAC = True
+DEV_ON_MAC = True
 
 @dataclass
 class strs:
@@ -84,7 +83,7 @@ class gui:
     BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
     
     EXPORT_WINDOW_SIZE = QSize(300,600)
-    HELP_WINDOW_SIZE = QSize(900,600)
+    HELP_WINDOW_SIZE = QSize(1000,600)
     
     COMMAND_CONTAINER_QSIZE = QSize(620,620)
 
@@ -170,22 +169,29 @@ class dialog:
             "That's all you gotta know."
         ]
         COMMANDS = [
-            "There are 2 types of Commands\n",
-            "Single - One key press.\n",
-            "Combo - Two key presses at the same time.\n",
-            "You can delete commands by pressing the X next to them.\n\n"
             "Input Fields:\n",
-            "  Nickname - This will be the nickname for the command. It is suggested that you use whatever the command does. (jump, run, etc.)\n"
+            "  Nickname - This will be the nickname for the command. It is suggested that you use whatever the command does. (jump, run, etc.)\n",
             "  Key - The key(s) that is being pressed. You can see the valid keys by pressing the button 'Valid Keys'\n",
-            "  Press Cmd - This is what chat will type to quickly tap the key(s).\n"
+            "  Press Cmd - This is what chat will type to quickly tap the key(s).\n",
             "  Hold Cmd - This is what chat will type to hold down the key(s).\n",
-            "  Probability - This is the odds that the button will actually be pressed. It's based off percentage. If you set it to 50, then there's a 50% chance that command will be executed.\n",
+            "  Probability - This is the odds (in percentage) that the button will actually be pressed.\n",
         ]
         PRESETS = [
-            
+            "Presets are a collection of Commands.\n",
+            "The idea of Presets are so you don't have to add commands each time you wanna play.\n",
+            "I'd name them based on the game or console you're making them for, but you can do you.\n\n",
+            "You can also Export or Import presets by clicking the respective button.\n",
+            "You can choose to simply copy the file to your clipboard without needing to save the file. (Mainly to just paste the file in Discord).\n",
+            "But you can also save the file if you want.\n",
+            "You'll see the options."
         ]
         PLAY = [
-            
+            "Click 'Start Playing'.\n",
+            "In order for this to work, the game window needs to be in focus.",
+            "Otherwise, keys will still be mercilessly 'pressed' on the window you are focused on. That could be messy.\n",
+            "There will be a short delay so that you can switch to the game window.\n",
+            "If I coded in a countdown, then there will be a countdown.\n",
+            "Have fun."
         ]
 
 @dataclass

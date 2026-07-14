@@ -5,7 +5,7 @@ from platform_connections import Twitch
 from configurations import PRESETS
 import random
 from threading import Event
-if not ON_MAC:
+if not DEV_ON_MAC:
     import logic.controller as cntrl
 
 
