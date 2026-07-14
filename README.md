@@ -11,11 +11,13 @@ Planned Features:
 
     - Background game control (if possible. It's kinda ambitious.)
 
-    - Split chat alphabetically
-
     - "Multiplayer"
 
-    - Timer for switching who has control
+        - Split chat alphabetically
+
+        - Timer for switching who has control
+
+        - Random inputs bot
 
     - Export something to put commands into a bot
 
@@ -24,8 +26,6 @@ Planned Features:
     - See available keys
 
     - Mouse inputs
-
-    - Random inputs bot
 
     - Duplicate a preset
 
