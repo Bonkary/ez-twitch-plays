@@ -9,5 +9,6 @@ old/
 .vscode/
 *.json
 .env
+temp/
 
 

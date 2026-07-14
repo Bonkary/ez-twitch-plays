@@ -467,15 +467,21 @@ class SingleCommandInputs(QWidget):
         self._addButton.clicked.connect(self.add)
         self._clearButton.clicked.connect(self.clear_inputs)
         
+        self._keyInput.signals.textChanged.connect(self._keyInput.clearAlert)
+        self._nicknameInput.signals.textChanged.connect(self._nicknameInput.clearAlert)
+        self._probInput.signals.textChanged.connect(self._probInput.clearAlert)
+        self._pressCmdInput.signals.textChanged.connect(self._pressCmdInput.clearAlert)
+        self._holdCmdInput.signals.textChanged.connect(self._holdCmdInput.clearAlert)
+        
     def get_inputs(self) -> dict:
         '''Get the inputs. If there are empty ones, it will let you know.'''
         if self._probInput.getText():
             try:
                 prob = int(self._probInput.getText())
             except ValueError:
-                # JUST DEV STUFF RN
-                print("not a valid value dude")
-                prob = 0
+                print("not a valid value dude") # DEV
+                self._keyInput.alert()
+                return
         else:
             prob = 100
         
@@ -574,7 +580,7 @@ class ComboCommandInputs(QWidget):
         self._nicknameInput = TitledLineEdit(title='Nickname', title_placement='side', spacing=22, padding=(88,0), center_padding=30)
         self._pressCmdInput = TitledLineEdit(title='Press Cmd', title_placement='side', spacing=22, padding=(81,3), center_padding=30)
         self._holdCmdInput = TitledLineEdit(title='Hold Cmd', title_placement='side', spacing=22, padding=(88,0), center_padding=30)
-        self._probCmdInput = TitledLineEdit(title='Probability (0-100)', title_placement='side', spacing=22, padding=(70,15), center_padding=0, placeholder='100')
+        self._probInput = TitledLineEdit(title='Probability (0-100)', title_placement='side', spacing=22, padding=(70,15), center_padding=0, placeholder='100')
         self._key1Input = TitledLineEdit(title="Key 1", title_placement='side')
         self._key2Input = TitledLineEdit(title="Key 2", title_placement='side', padding=(0,3))
         self._clearButton = BasicPushButton(text="Clear", stylesheet="font-size: 15px;")
@@ -609,7 +615,7 @@ class ComboCommandInputs(QWidget):
         mainLayout.addSpacing(spacing)
         mainLayout.addWidget(self._holdCmdInput, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(spacing)
-        mainLayout.addWidget(self._probCmdInput, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(self._probInput, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(20)
         mainLayout.addLayout(buttonLayout)
         
@@ -617,6 +623,13 @@ class ComboCommandInputs(QWidget):
         
         self._clearButton.clicked.connect(self.clear_inputs)
         self._addButton.clicked.connect(self.add)
+        
+        self._key1Input.signals.textChanged.connect(self._key1Input.clearAlert)
+        self._key2Input.signals.textChanged.connect(self._key2Input.clearAlert)
+        self._nicknameInput.signals.textChanged.connect(self._nicknameInput.clearAlert)
+        self._probInput.signals.textChanged.connect(self._probInput.clearAlert)
+        self._pressCmdInput.signals.textChanged.connect(self._pressCmdInput.clearAlert)
+        self._holdCmdInput.signals.textChanged.connect(self._holdCmdInput.clearAlert)
 
     def clear_inputs(self) -> None:
         '''Clear all the inputs'''
@@ -625,13 +638,13 @@ class ComboCommandInputs(QWidget):
         self._key2Input.clear()
         self._pressCmdInput.clear()
         self._holdCmdInput.clear()
-        self._probCmdInput.clear()
+        self._probInput.clear()
     
     def get_inputs(self) -> dict:
         '''Get all the inputs'''
-        if self._probCmdInput.getText():
+        if self._probInput.getText():
             try:
-                prob = int(self._probCmdInput.getText())
+                prob = int(self._probInput.getText())
             except ValueError:
                 # JUST DEV STUFF RN
                 print("not a valid value dude")

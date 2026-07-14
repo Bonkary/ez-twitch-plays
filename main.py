@@ -66,9 +66,9 @@ class TwitchPlays(wdgts.CustomQWidget):
         
         headerLayout = wdgts.NoPadHBoxLayout()
         headerLayout.addStretch()
-        headerLayout.addSpacing(100)
+        headerLayout.addSpacing(620)
         headerLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
-        headerLayout.addSpacing(400)
+        headerLayout.addSpacing(390)
         headerLayout.addLayout(headerButtonLayout)
         headerLayout.addStretch()
         
@@ -90,7 +90,7 @@ class TwitchPlays(wdgts.CustomQWidget):
         #   Main Layout
         mainLayout.addSpacing(10)
         mainLayout.addLayout(headerLayout)
-        mainLayout.addSpacing(10)
+        mainLayout.addSpacing(30)
         mainLayout.addLayout(inputsLayout)
         mainLayout.addSpacing(20)
         mainLayout.addLayout(containerLayout)
@@ -102,8 +102,8 @@ class TwitchPlays(wdgts.CustomQWidget):
         self._controlManager.signals.fillContainer.connect(self._comboCommandContainer.fill)
         self._controlManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
         self._controlManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
-        self._helpButton.clicked.connect(lambda: popups.Help(self).exec())
-        self._validKeysButton.clicked.connect(lambda: popups.ValidKeys(self).exec())
+        self._helpButton.clicked.connect(lambda: popups.Help(self).show())
+        self._validKeysButton.clicked.connect(lambda: popups.ValidKeys(self).show())
 
 if __name__ == "__main__":
     app = QApplication([])

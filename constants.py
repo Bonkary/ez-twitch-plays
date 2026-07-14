@@ -84,6 +84,7 @@ class gui:
     
     EXPORT_WINDOW_SIZE = QSize(300,600)
     HELP_WINDOW_SIZE = QSize(1000,600)
+    VALID_KEYS_WINDOW_SIZE = QSize(600,700)
     
     COMMAND_CONTAINER_QSIZE = QSize(620,620)
 
@@ -173,8 +174,8 @@ class dialog:
             "  Nickname - This will be the nickname for the command. It is suggested that you use whatever the command does. (jump, run, etc.)\n",
             "  Key - The key(s) that is being pressed. You can see the valid keys by pressing the button 'Valid Keys'\n",
             "  Press Cmd - This is what chat will type to quickly tap the key(s).\n",
-            "  Hold Cmd - This is what chat will type to hold down the key(s).\n",
-            "  Probability - This is the odds (in percentage) that the button will actually be pressed.\n",
+            "  Hold Cmd - This is what chat will type to briefly hold down the key(s).\n",
+            "  Probability - This is the odds (percentage) that the key will actually be pressed. Mainly for large streams or annoying commands.\n",
         ]
         PRESETS = [
             "Presets are a collection of Commands.\n",
@@ -196,10 +197,64 @@ class dialog:
 
 @dataclass
 class keys:
-    class const:
-        HOLD_DURATION = 1.5
-        PRESS_DURATION = 0.2
-
+    HOLD_DURATION = 1.5
+    PRESS_DURATION = 0.2
+    
+    VALID_LIST = [
+        'A-Z',
+        '0-9',
+        'F1-F12',
+        'numpad0-numpad9',
+        'esc',
+        'escape',
+        'backspace',
+        'return',
+        'enter',
+        'space',
+        'shift',
+        'shiftleft',
+        'shiftright',
+        'ctrl',
+        'ctrlleft',
+        'ctrlright',
+        'alt',
+        'altleft',
+        'altright',
+        '-',
+        '=',
+        'numlock',
+        'up',
+        'down',
+        'left',
+        'right'
+    ]
+    A = 'a'
+    B = 'b'
+    C = 'c'
+    D = 'd'
+    E = 'e'
+    F = 'f'
+    G = 'g'
+    H = 'h'
+    I = 'i'
+    J = 'j'
+    K = 'k'
+    L = 'l'
+    M = 'm'
+    N = 'n'
+    O = 'o'
+    P = 'p'
+    Q = 'q'
+    R = 'r'
+    S = 's'
+    T = 't'
+    U = 'u'
+    V = 'v'
+    W = 'w'
+    X = 'x'
+    Y = 'y'
+    Z = 'z'
+    
 @dataclass
 class alerts:
     EMPTY_CHANNEL_NAME = 'channel_name'

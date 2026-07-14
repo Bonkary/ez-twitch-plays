@@ -1,11 +1,11 @@
 # Ez Twitch Plays
-This is a GUI that allows streamers who don't know jack-diddly-squat about coding to do Twitch Plays.
+This is a GUI that allows streamers who don't know jack-diddly-squat about coding to do Twitch Plays. Don't expect something beautiful, but it works. I think.
 
-It seemed all other projects required for you to poke around in the code to get things to work. With this, you shouldn't need to touch any code. I tried to build it for the dumbos (kinda kidding).
+It seemed all other projects required for you to poke around in the code to get things to work. With this, you don't *need* to touch any code as its been packaged into a .exe file.
 
 The streaming platform connection code is based off of DougDoug's code (also shoutout Ottomated and DDark), although it's been altered greatly.
 
-Another shoutout to Xenova for making [twitch_chat_irc](https://github.com/xenova/twitch-chat-irc). You made my life easy.
+Another shoutout to Xenova for having made [twitch_chat_irc](https://github.com/xenova/twitch-chat-irc). You've unknowingly made my life slightly easier.
 
 Planned Features:
 
@@ -29,4 +29,6 @@ Planned Features:
 
     - Duplicate a preset
 
-    - Ability to use OAuth and use Twitch's API. Idk why, but I wanna.
+    - Ability to use OAuth and use Twitch's API. Idk why, but I wanna. Maybe cool things later? Idk.
+
+    - XIM type inputs, but that would cost money to test, so... idk

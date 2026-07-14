@@ -9,6 +9,7 @@ import configurations as cfg
 from typing import Literal
 import json
 import subprocess
+import math
 
 class CustomQDialog(QDialog):
     def __init__(self, parent):
@@ -196,4 +197,43 @@ class Help(CustomQDialog):
 class ValidKeys(CustomQDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        self.setFixedSize(gui.VALID_KEYS_WINDOW_SIZE)
+        
+        title = wdgts.BasicLabel("Valid Keys", font=fonts.TITLE, underline=True)
+        tip = wdgts.BasicLabel("These are what you can type in the 'Key' field.", font=fonts.HELP_TEXT)
+        
+        if len(keys.VALID_LIST) % 2 == 0:
+            halfIndex1 = len(keys.VALID_LIST) / 2
+            halfIndex2 = halfIndex1 + 1
+        else:
+            halfIndex1 = math.ceil(len(keys.VALID_LIST)/2)
+            halfIndex2 = math.floor(len(keys.VALID_LIST)/2)
+        
+        halfIndex1 = int(halfIndex1)
+        halfIndex2 = int(halfIndex2)
+        keys1 = wdgts.BasicLabel("\n\n".join(keys.VALID_LIST[:halfIndex1]), font=fonts.HELP_TEXT, alignment=gui.ALIGN_LEFT)
+        keys2 = wdgts.BasicLabel("\n\n".join(keys.VALID_LIST[halfIndex2:]), font=fonts.HELP_TEXT, alignment=gui.ALIGN_LEFT)
+        
+        keyLayout = wdgts.NoPadHBoxLayout()
+        keyLayout.addStretch()
+        keyLayout.addWidget(keys1)
+        keyLayout.addStretch()
+        keyLayout.addWidget(keys2)
+        keyLayout.addStretch()
+        
+        mainLayout = wdgts.NoPadVBoxLayout()
+        mainLayout.addStretch()
+        mainLayout.addWidget(title)
+        mainLayout.addSpacing(10)
+        mainLayout.addWidget(tip)
+        mainLayout.addSpacing(100)
+        mainLayout.addLayout(keyLayout)
+        mainLayout.addStretch()
+        
+        self.setLayout(mainLayout)
+        
+        
+        
+        
        

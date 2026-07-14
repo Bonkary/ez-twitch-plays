@@ -4,7 +4,7 @@ from constants import *
 from platform_connections import *
 from typing import Literal
 
-def hold_key(key: str, *, duration: int = keys.const.HOLD_DURATION) -> None:
+def hold_key(key: str, *, duration: int = keys.HOLD_DURATION) -> None:
     '''
     Holds down the key for a certain interval.
     
@@ -40,7 +40,7 @@ def press_combo_key(*, keys: tuple) -> None:
     press_key(keys[0])
     press_key(keys[1])
 
-def hold_combo_key(*, keys: (tuple), duration: int = keys.const.HOLD_DURATION) -> None:
+def hold_combo_key(*, keys: (tuple), duration: int = keys.HOLD_DURATION) -> None:
     '''
     Hold 2 buttons at the same time.
     
