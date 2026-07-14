@@ -6,6 +6,18 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QBoxLayout
 from threading import Event
 
+def create_font(*, family: str, point_size: int = 15, bold: bool = False, underline: bool = False, pixel_size: int | None = None) -> QFont:
+    font = QFont()
+    font.setFamily(family)
+    font.setBold(bold)
+    font.setUnderline(underline)
+    if pixel_size:
+        font.setPixelSize(pixel_size)
+    else:
+        font.setPointSize(point_size)
+        
+    return font
+
 THREAD_POOL = QThreadPool.globalInstance()
 EXEC_THREAD = QThread()
 
@@ -50,6 +62,14 @@ class gui:
     class index: # Stacked Layouts
         PLAY_BUTTON = 0
         STOP_BUTTON = 1
+        
+        HELP_SELECTION = 0
+        HELP_DISPLAY = 1
+        HELP_CONNECT = 0
+        HELP_COMMANDS = 1
+        HELP_PRESETS = 2
+        HELP_PLAY = 3
+        
     MAIN_WINDOW_SIZE = QSize(1700,900)
     
     ALIGN_CENTER = Qt.AlignmentFlag.AlignCenter
@@ -64,18 +84,22 @@ class gui:
     BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
     
     EXPORT_WINDOW_SIZE = QSize(300,600)
+    HELP_WINDOW_SIZE = QSize(900,600)
     
     COMMAND_CONTAINER_QSIZE = QSize(620,620)
 
 @dataclass
 class fonts:
     FONT_FAMILY = "Arial"
-    DEFAULT = QFont(FONT_FAMILY, pointSize=11)
-    DEFAULT_LARGE = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+5)
-    TITLE = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+10)
-    CONTAINER_TITLE = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+5)
-    NICKNAME = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+1)
-    CHANNEL = QFont(FONT_FAMILY, pointSize=15)
+    DEFAULT_POINT_SIZE = 11
+    DEFAULT = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE)
+    DEFAULT_LARGE = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE+5)
+    TITLE = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE+10)
+    CONTAINER_TITLE = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE+5)
+    NICKNAME = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE+1)
+    CHANNEL = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE+4)
+    HELP_TITLE = create_font(family=FONT_FAMILY, point_size=DEFAULT_POINT_SIZE+10, underline=True)
+    HELP_TEXT = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE+5)
 
 @dataclass
 class dirs:
@@ -135,26 +159,34 @@ class styles:
                 color: %s;
             }
             """ % (colors.DARK_PURPLE, colors.PURPLE, colors.DARK_PURPLE, colors.DEFAULT_TEXT)
-    
+
 @dataclass
 class dialog:
     @dataclass
-    class tutorial:
-        INTRO = [
-            "Welcome to Ez Twitch Plays!",
-            "Here's a breakdown of what everything is."
+    class help:
+        CONNECT = [
+            "Towards the top, there is a place to enter your Twitch channel name.",
+            "Once you click Start Playing, the connection will be made.",
+            "That's all you gotta know."
         ]
-        COMBOS = "There's single commands and combo commands. Combo commands are 2 keys pressed or held at the same time. Single is... a single key."
-        NICKNAME = "This is what the command is called. The action its performing is a good name. (ex. Jump)"
-        KEY = "Whatever key you want to be pressed."
-        PRESS = "Chat command for a quick press of the key."
-        HOLD = "Chat command for a short hold of the key."
-        PROBABILITY = "How often you want the command to be allowed through. Good idea if the command is obnoxious or if you just wanna slow down the inputs.",
-        TWITCH_CHANNEL = "On the top there is a place to put your channel name. It's a must."
-        PRESETS = "You can save presets for games so you don't have to type everything in every time. Select them with the dropdown."
-        COMMANDS = "After you add a command, you'll see it appear. You can click the X next to the nickname to delete it."
-        IMPORT_EXPORT = "You can also import and export presets. When you export a preset, you can choose to save it and whether to copy the file to the clipboard or not."
-        PLAY = "Once you have your preset and channel name, you can go ahead and hit that play button and it'll start taking in commands."
+        COMMANDS = [
+            "There are 2 types of Commands\n",
+            "Single - One key press.\n",
+            "Combo - Two key presses at the same time.\n",
+            "You can delete commands by pressing the X next to them.\n\n"
+            "Input Fields:\n",
+            "  Nickname - This will be the nickname for the command. It is suggested that you use whatever the command does. (jump, run, etc.)\n"
+            "  Key - The key(s) that is being pressed. You can see the valid keys by pressing the button 'Valid Keys'\n",
+            "  Press Cmd - This is what chat will type to quickly tap the key(s).\n"
+            "  Hold Cmd - This is what chat will type to hold down the key(s).\n",
+            "  Probability - This is the odds that the button will actually be pressed. It's based off percentage. If you set it to 50, then there's a 50% chance that command will be executed.\n",
+        ]
+        PRESETS = [
+            
+        ]
+        PLAY = [
+            
+        ]
 
 @dataclass
 class keys:

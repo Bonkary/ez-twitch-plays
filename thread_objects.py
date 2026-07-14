@@ -1,13 +1,12 @@
 from PySide6.QtCore import QRunnable, QObject, Slot, Signal, QEvent
-if not ON_MAC:
-    import logic.controller as cntrls
 from typing import Literal
 from constants import *
 from platform_connections import Twitch
 from configurations import PRESETS
 import random
 from threading import Event
-import logic.controller as cntrl
+if not ON_MAC:
+    import logic.controller as cntrls
 
 
 def get_key(preset_name: str, chat_cmd: str) -> tuple[str, str, int | tuple, str, int]:
@@ -95,6 +94,7 @@ class ManagerSignals(QObject):
     clearPresetAlert = Signal()
     clearChannelAlert = Signal()
 
+# TODO: check if you can change the Twitch channel while playing??
 class TwitchPlaysManager(QObject):
     '''
     Manages all the communication with Twitch.

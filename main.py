@@ -3,6 +3,7 @@ import widgets as wdgts
 from constants import *
 import sys
 import time
+import popups
 
 # NOTE: anywhere you see '# DEV' that just means its for development reasons only. It's not intended to stay forever.
 
@@ -51,17 +52,25 @@ class TwitchPlays(wdgts.CustomQWidget):
         self._comboInputs = wdgts.ComboCommandInputs(control_manager=self._controlManager)
         self._singleCommandContainer = wdgts.CommandContainer(cmd_type=strs.SINGLE, control_manager=self._controlManager)
         self._comboCommandContainer = wdgts.CommandContainer(cmd_type=strs.COMBO, control_manager=self._controlManager)
-        self._tutorialButton = wdgts.BasicPushButton(text="Tutorial")
+        self._helpButton = wdgts.BasicPushButton(text="Help")
         self._validKeysButton = wdgts.BasicPushButton(text="Valid Keys")
         
         # Header Layout
-        headerLayout = wdgts.NoPadHBoxLayout()
         
-        #  Header Buttons Layout
+        
+        #  Header Layout
         headerButtonLayout = wdgts.NoPadHBoxLayout()
-        headerButtonLayout.addWidget(self._tutorialButton)
-        headerButtonLayout.addSpacing(10)
         headerButtonLayout.addWidget(self._validKeysButton)
+        headerButtonLayout.addSpacing(30)
+        headerButtonLayout.addWidget(self._helpButton)
+        
+        headerLayout = wdgts.NoPadHBoxLayout()
+        headerLayout.addStretch()
+        headerLayout.addSpacing(100)
+        headerLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
+        headerLayout.addSpacing(400)
+        headerLayout.addLayout(headerButtonLayout)
+        headerLayout.addStretch()
         
         #   Inputs Layout
         inputsLayout = wdgts.NoPadHBoxLayout()
@@ -78,13 +87,9 @@ class TwitchPlays(wdgts.CustomQWidget):
         containerLayout.addWidget(self._comboCommandContainer)
         containerLayout.addSpacing(20)
         
-        # singleScrollArea = QScrollArea()
-        # singleScrollArea.setBackgroundRole(QPalette.Dark)
-        # singleScrollArea.setLayout(containerLayout)
-        
         #   Main Layout
         mainLayout.addSpacing(10)
-        mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
+        mainLayout.addLayout(headerLayout)
         mainLayout.addSpacing(10)
         mainLayout.addLayout(inputsLayout)
         mainLayout.addSpacing(20)
@@ -97,6 +102,8 @@ class TwitchPlays(wdgts.CustomQWidget):
         self._controlManager.signals.fillContainer.connect(self._comboCommandContainer.fill)
         self._controlManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
         self._controlManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
+        self._helpButton.clicked.connect(lambda: popups.Help(self).exec())
+        self._validKeysButton.clicked.connect(lambda: popups.ValidKeys(self).exec())
 
 if __name__ == "__main__":
     app = QApplication([])

@@ -10,10 +10,20 @@ from typing import Literal
 import json
 import subprocess
 
-class Export(QDialog):
+class CustomQDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+    def setBackgroundColor(self, color: str) -> None:
+        self.setAutoFillBackground(True)
+        bg = self.palette()
+        bg.setColor(self.backgroundRole(), color)
+        self.setPalette(bg)
+
+class Export(CustomQDialog):
     '''Dialog window to choose how to export a Preset.'''
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(parent=parent)
         self._checkboxes: list[QCheckBox] = []
         
         # Widgets
@@ -135,7 +145,54 @@ class Export(QDialog):
         
         self.close()
             
+class Help(CustomQDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        self.setFixedSize(gui.HELP_WINDOW_SIZE)
+        
+        selector = wdgts.HelpSelection()
+        self._display = wdgts.HelpDisplay()
+        self._backButton = wdgts.BasicPushButton(text="Back", hide=True, width=150, height=40)
+        
+        self.stackedLayout = QStackedLayout()
+        self.stackedLayout.insertWidget(gui.index.HELP_SELECTION, selector)
+        self.stackedLayout.insertWidget(gui.index.HELP_DISPLAY, self._display)
+        self.stackedLayout.setCurrentIndex(gui.index.HELP_SELECTION)
+        
+        mainLayout = wdgts.NoPadVBoxLayout()
+        mainLayout.addLayout(self.stackedLayout)
+        mainLayout.addSpacing(30)
+        mainLayout.addWidget(self._backButton, alignment=gui.ALIGN_CENTER)
+        mainLayout.addStretch()
+        
+        self.setLayout(mainLayout)
+        
+        selector.connectButton.clicked.connect(lambda: self.display_help('connect'))
+        selector.cmdsButton.clicked.connect(lambda: self.display_help('commands'))
+        selector.presetsButton.clicked.connect(lambda: self.display_help('presets'))
+        selector.playButton.clicked.connect(lambda: self.display_help('play'))
+        self._backButton.clicked.connect(self.back)
+        
+    def display_help(self, selection: str) -> None:
+        match selection:
+            case 'connect':
+                self._display.connect_twitch()
+            case 'commands':
+                self._display.commands()
+            case 'presets':
+                self._display.presets()
+            case 'play':
+                self._display.play()
+        self.stackedLayout.setCurrentIndex(gui.index.HELP_DISPLAY)
+        self._backButton.show()
+    
+    def back(self) -> None:
+        self.stackedLayout.setCurrentIndex(gui.index.HELP_SELECTION)
+        self._backButton.hide()
 
 
-
+class ValidKeys(CustomQDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
        

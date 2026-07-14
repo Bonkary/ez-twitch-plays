@@ -12,6 +12,7 @@ import configurations as cfg
 import json
 import popups
 from thread_objects import TwitchPlaysManager
+import warnings
 
 # TODO: Slots and Signals decorating type shit. Gotta get that marginal performance boost that absolutely no one will ever notice.
 
@@ -37,6 +38,7 @@ class CustomQMainWindow(QMainWindow):
         bg.setColor(self.backgroundRole(), color)
         self.setPalette(bg)
 
+
 # General
 class TitledDropdown(QFrame):
     '''
@@ -54,7 +56,7 @@ class TitledDropdown(QFrame):
         self.alertActive = False
         
          # Widgets
-        titleLabel = BasicLabel(text=title, font=font)
+        titleLabel = BasicLabel(text=title, font=QFont(font))
         self._dropdown = BasicComboBox(width=200, stylesheet=styles.DROPDOWN)
         if values:
             for value in values:
@@ -152,17 +154,23 @@ class TitledLineEdit(QFrame):
         center_padding - Padding between the Title and LineEdit.
         placeholder - Placeholder text.
     '''
-    def __init__(self, *, title: str, title_placement: Literal['top', 'side'], 
-                 title_font: QFont = QFont(fonts.DEFAULT),
+    def __init__(self, *, title: str, title_placement: Literal['top', 'side'],
+                 font: QFont = fonts.DEFAULT,
                  title_alignment: Literal['left', 'right', 'center'] = 'left',
                  spacing: int = 10, width: int = 100, center_stretch: bool = False,
-                 padding: tuple[int:int] = (0,0), center_padding: int = 0, placeholder: str = ''):
+                 padding: tuple[int:int] = (0,0), center_padding: int = 0, placeholder: str = '',
+                 underline: bool = False, bold: bool = False):
         super().__init__()
         self.signals = WidgetSignals()
         self.alertActive = False
         
+        font = QFont(font)
+        if font.isCopyOf(fonts.DEFAULT):
+            font.setUnderline(underline)
+            font.setBold(bold)
+        
         # Widgets
-        titleLabel = BasicLabel(text=title, font=title_font)
+        titleLabel = BasicLabel(text=title, font=font)
         self._entry = BasicLineEdit(width=width, stylesheet=styles.LINE_EDIT, placeholder=placeholder)
         
         # Layouts
@@ -276,13 +284,17 @@ class BasicLabel(QLabel):
         stylesheet - The stylesheet to use.
         width - The value of the width.
     '''
-    def __init__(self, text: str = None, *, font: QFont = QFont(fonts.DEFAULT),
+    def __init__(self, text: str = None, *, font: QFont = fonts.DEFAULT,
                  alignment: Qt.AlignmentFlag = gui.ALIGN_CENTER, underline: bool = False,
                  stylesheet: str = None, width: int = None, bold: bool = False):
         super().__init__(parent=None, text=text)
-        font.setUnderline(underline)
-        font.setBold(bold)
+        
+        font = QFont(font)
+        if font.isCopyOf(fonts.DEFAULT):
+            font.setUnderline(underline)
+            font.setBold(bold)
         self.setFont(font)
+            
         self.setAlignment(alignment)
         if width:
             self.setFixedWidth(width)
@@ -302,18 +314,24 @@ class BasicPushButton(QPushButton):
         icon - The QIcon to use.
         flat - Whether to make the button flat.
     '''
-    def __init__(self, *, text: str = None, font: QFont = QFont(fonts.DEFAULT), width: int = 100, height: int = 25, stylesheet: str = None, icon: QIcon | None = None, flat: bool = False):
+    def __init__(self, *, text: str = None, font: QFont = QFont(fonts.DEFAULT), width: int = 100, height: int = 25,
+                 stylesheet: str = None, icon: QIcon | None = None, flat: bool = False, size: QSize | None = None, hide: bool = False):
         super().__init__(parent=None, text=text)    
         self.setFont(font)
-        self.setFixedHeight(height)
-        self.setFixedWidth(width)
         self.setFlat(flat)
         self.setText(text)
         if stylesheet:
             self.setStyleSheet(stylesheet)
         if icon:
             self.setIcon(icon)
-
+        if size:
+            self.setFixedSize(size)
+        else:
+            self.setFixedHeight(height)
+            self.setFixedWidth(width)
+        if hide:
+            self.hide()
+        
 class BasicComboBox(QComboBox):
     '''
     QComboBox but you can create/config it with less lines of code.
@@ -366,6 +384,7 @@ class BasicCheckbox(QCheckBox):
         if checked:
             self.setCheckState(Qt.CheckState.Checked)
 
+
 # Layouts
 class NoPadHBoxLayout(QHBoxLayout):
     '''QHBoxLayout that has no padding around it.'''
@@ -385,9 +404,10 @@ class NoPadVBoxLayout(QVBoxLayout):
         self.setContentsMargins(0,0,0,0)
         self.setSpacing(0)
 
+
 # Inputs
 # TODO: dont allow duplicate nickname
-class SingleCommandInputs(QFrame):
+class SingleCommandInputs(QWidget):
     '''
     This is where all the inputs are for the single commands.
     
@@ -407,7 +427,7 @@ class SingleCommandInputs(QFrame):
         self._keyInput = TitledLineEdit(title="Key", title_placement='side', center_stretch=centerStretch)
         self._pressCmdInput = TitledLineEdit(title="Press Cmd", title_placement='side', center_stretch=centerStretch)
         self._holdCmdInput = TitledLineEdit(title="Hold Cmd", title_placement='side', center_stretch=centerStretch)
-        self._probInput = TitledLineEdit(title="Probability (0-100)", title_placement='side', center_stretch=centerStretch)
+        self._probInput = TitledLineEdit(title="Probability (0-100)", title_placement='side', center_stretch=centerStretch, placeholder='100')
         
         # Layouts
         rootLayout = NoPadHBoxLayout() # Squishes it all together
@@ -535,7 +555,7 @@ class SingleCommandInputs(QFrame):
         self.signals.addCommand.emit(newCmd)
         self.clear_inputs()
 
-class ComboCommandInputs(QFrame):
+class ComboCommandInputs(QWidget):
     '''
     The inputs for the ComboCommands.
     
@@ -552,7 +572,7 @@ class ComboCommandInputs(QFrame):
         self._nicknameInput = TitledLineEdit(title='Nickname', title_placement='side', spacing=22, padding=(88,0), center_padding=30)
         self._pressCmdInput = TitledLineEdit(title='Press Cmd', title_placement='side', spacing=22, padding=(81,3), center_padding=30)
         self._holdCmdInput = TitledLineEdit(title='Hold Cmd', title_placement='side', spacing=22, padding=(88,0), center_padding=30)
-        self._probCmdInput = TitledLineEdit(title='Probability (0-100)', title_placement='side', spacing=22, padding=(70,15), center_padding=0)
+        self._probCmdInput = TitledLineEdit(title='Probability (0-100)', title_placement='side', spacing=22, padding=(70,15), center_padding=0, placeholder='100')
         self._key1Input = TitledLineEdit(title="Key 1", title_placement='side')
         self._key2Input = TitledLineEdit(title="Key 2", title_placement='side', padding=(0,3))
         self._clearButton = BasicPushButton(text="Clear", stylesheet="font-size: 15px;")
@@ -693,7 +713,7 @@ class ComboCommandInputs(QFrame):
         self.signals.addCommand.emit(newCmd)
         self.clear_inputs()
 
-class Command(QFrame):
+class Command(QWidget):
     '''
     This widget is a container for the info about the command
     
@@ -760,16 +780,16 @@ class Command(QFrame):
 
 
 # Managers
-class ControlManager(QFrame):
+class ControlManager(QWidget):
     '''This is where all the preset controls, import/export and start/stop'''
     def __init__(self, parent=None):
         super().__init__(parent)
         self.signals = ManagerSignals()
         self._twitchManager = TwitchPlaysManager(channel_name=SETTINGS[strs.CHANNEL_NAME])
-        QTimer.singleShot(1000, EXEC_THREAD.start)
         
         self._twitchManager.moveToThread(EXEC_THREAD)
         EXEC_THREAD.started.connect(self._twitchManager.start_listening)
+        QTimer.singleShot(1000, EXEC_THREAD.start)
         
         # Widgets
         self._newButton = BasicPushButton(text='New')
@@ -781,7 +801,7 @@ class ControlManager(QFrame):
         self._presetDropdown = TitledDropdown(title='Preset', title_placement='top', values=PRESETS)
         self._channelInput = TitledLineEdit(title="Twitch Channel", title_placement='side',
                                             title_alignment=gui.ALIGN_CENTER,
-                                            title_font=fonts.CHANNEL,
+                                            font=fonts.CHANNEL,
                                             placeholder=SETTINGS[strs.CHANNEL_NAME])
         
         # Layouts
@@ -821,7 +841,7 @@ class ControlManager(QFrame):
         
         # Connections
         self._newButton.clicked.connect(self.new_preset)
-        self._exportButton.clicked.connect(self.create_export_window)
+        self._exportButton.clicked.connect(self.open_export_window)
         self._presetDropdown.signals.textChanged.connect(lambda: self.signals.fillContainer.emit(self._presetDropdown.getCurrentText()))
         self._presetDropdown.signals.textChanged.connect(self._presetDropdown.clearAlert)
         self._deleteButton.clicked.connect(self.delete)
@@ -881,16 +901,15 @@ class ControlManager(QFrame):
         self.signals.fillContainer.emit(self._presetDropdown.getCurrentText())
     
     @Slot()
-    def create_export_window(self) -> None:
+    def open_export_window(self) -> None:
         '''Creates the popup for the Export options'''
         if not PRESETS:
-            msg = QMessageBox(text="Ye doth have nothin' to export.")
-            
+            msg = QMessageBox(self, text="Ye doth have nothin' to export.")
             msg.setFont(fonts.DEFAULT)
             msg.exec()
             return
             
-        popup = popups.Export()
+        popup = popups.Export(self)
         popup.exec()
 
     @Slot()
@@ -959,8 +978,9 @@ class ControlManager(QFrame):
             case alerts.EMPTY_CHANNEL_NAME:
                 self._channelInput.clearAlert()
 
+
 # Containers 
-class CommandContainer(QFrame):
+class CommandContainer(QWidget):
     '''
     Container for the Command widgets.
     
@@ -1080,6 +1100,106 @@ class CommandContainer(QFrame):
                 widget.deleteLater()
         self._widgetCache.clear()
         self._existingNicknames.clear()
+
+
+# Help Popup
+class HelpSelection(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        buttonSize = QSize(200,40)
+        topLabel = BasicLabel("Whatcha need help with?", font=fonts.TITLE)
+        self.connectButton = BasicPushButton(text="Connecting to Twitch", size=buttonSize)
+        self.cmdsButton = BasicPushButton(text="Adding Commands", size=buttonSize)
+        self.presetsButton = BasicPushButton(text="Presets", size=buttonSize)
+        self.playButton = BasicPushButton(text="Start Playing", size=buttonSize)
+        
+        # Selection Layout
+        buttonSpacing = 20
+        selectionLayout = NoPadVBoxLayout()
+        selectionLayout.addStretch()
+        selectionLayout.addSpacing(50)
+        selectionLayout.addWidget(topLabel)
+        selectionLayout.addSpacing(50)
+        selectionLayout.addWidget(self.connectButton, alignment=gui.ALIGN_CENTER)
+        selectionLayout.addSpacing(buttonSpacing)
+        selectionLayout.addWidget(self.cmdsButton, alignment=gui.ALIGN_CENTER)
+        selectionLayout.addSpacing(buttonSpacing)
+        selectionLayout.addWidget(self.presetsButton, alignment=gui.ALIGN_CENTER)
+        selectionLayout.addSpacing(buttonSpacing)
+        selectionLayout.addWidget(self.playButton, alignment=gui.ALIGN_CENTER)
+        selectionLayout.addSpacing(buttonSpacing)
+        selectionLayout.addStretch()
+        
+        self.setLayout(selectionLayout)
+        
+class HelpDisplay(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        connectHelp = HelpConnect()
+        commandsHelp = HelpCommands()
+        presetsHelp = HelpPresets()
+        playHelp = HelpPlay()
+        
+        self._mainLayout = QStackedLayout()
+        self._mainLayout.insertWidget(gui.index.HELP_CONNECT, connectHelp)
+        self._mainLayout.insertWidget(gui.index.HELP_COMMANDS, commandsHelp)
+        self._mainLayout.insertWidget(gui.index.HELP_PRESETS, presetsHelp)
+        self._mainLayout.insertWidget(gui.index.HELP_PLAY, playHelp)
+        
+        self.setLayout(self._mainLayout)
+        
+    def connect_twitch(self) -> None:
+        '''Display the help text for Twitch Connect'''
+        self._mainLayout.setCurrentIndex(gui.index.HELP_CONNECT)
+    
+    def commands(self) -> None:
+        '''Display the help text for Commands'''
+        self._mainLayout.setCurrentIndex(gui.index.HELP_COMMANDS)
+        
+    def presets(self) -> None:
+        '''Display the help text for Presets'''
+        self._mainLayout.setCurrentIndex(gui.index.HELP_PRESETS)
+    
+    def play(self) -> None:
+        '''Display the help text for Playing'''
+        self._mainLayout.setCurrentIndex(gui.index.HELP_PLAY)
+
+class HelpConnect(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        titleLabel = BasicLabel("Connecting to Twitch", font=fonts.HELP_TITLE)
+        line0 = BasicLabel(dialog.help.CONNECT[0], font=fonts.HELP_TEXT)
+        line1 = BasicLabel(dialog.help.CONNECT[1], font=fonts.HELP_TEXT)
+        line2 = BasicLabel(dialog.help.CONNECT[2], font=fonts.HELP_TEXT)
+        
+        lineSpacing = 30
+        mainLayout = NoPadVBoxLayout()
+        mainLayout.addStretch()
+        mainLayout.addWidget(titleLabel)
+        mainLayout.addSpacing(50)
+        mainLayout.addWidget(line0)
+        mainLayout.addSpacing(lineSpacing)
+        mainLayout.addWidget(line1)
+        mainLayout.addSpacing(lineSpacing)
+        mainLayout.addWidget(line2)
+        mainLayout.addStretch()
+        
+        self.setLayout(mainLayout)
+
+class HelpCommands(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+class HelpPresets(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+class HelpPlay(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
 # Signals 
 class ManagerSignals(QObject):
