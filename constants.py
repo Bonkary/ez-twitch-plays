@@ -162,7 +162,10 @@ class keys:
         HOLD_DURATION = 1.5
         PRESS_DURATION = 0.2
 
-
+@dataclass
+class alerts:
+    EMPTY_CHANNEL_NAME = 'channel_name'
+    EMPTY_PRESET = 'preset'
 
 
 

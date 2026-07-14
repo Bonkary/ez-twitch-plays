@@ -98,7 +98,6 @@ class TwitchPlays(wdgts.CustomQWidget):
         self._controlManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
         self._controlManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
 
-
 if __name__ == "__main__":
     app = QApplication([])
     

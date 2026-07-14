@@ -47,14 +47,14 @@ class TitledDropdown(QFrame):
         titleFont - Font of the title
         titlePlacement - Where to place the title
     '''
-    def __init__(self, *, title: str, title_placement: Literal['top', 'side'], font: QFont = fonts.DEFAULT, values: list = None):
+    def __init__(self, *, title: str, title_placement: Literal['top', 'side'], font: QFont = QFont(fonts.DEFAULT), values: list = None):
         super().__init__()
         self.signals = DropwdownSignals()
         self._values: list[str] = []
         self.alertActive = False
         
          # Widgets
-        titleLabel = BasicLabel(text=title)
+        titleLabel = BasicLabel(text=title, font=font)
         self._dropdown = BasicComboBox(width=200, stylesheet=styles.DROPDOWN)
         if values:
             for value in values:
@@ -89,7 +89,6 @@ class TitledDropdown(QFrame):
         Arguments:
             item - Value to add to the dropdown
         '''
-        
         self._dropdown.addItem(item)
         self._values.append(item)
         
@@ -109,7 +108,6 @@ class TitledDropdown(QFrame):
         Arguments:
             index - Index to the set dropdown to.
         '''
-        
         self._dropdown.setCurrentIndex(index)
         
     def getCurrentText(self) -> str:
@@ -123,17 +121,18 @@ class TitledDropdown(QFrame):
         Arguments:
             item - Value to remove from the dropdown.
         '''
-        
         self._values.remove(item)
         self._dropdown.clear()
         for value in self._values:
             self._dropdown.addItem(value)
     
     def alert(self) -> None:
+        '''Change the stylesheet to display an error.'''
         self.alertActive = True
         self._dropdown.setStyleSheet(styles.DROPDOWN_ALERT)
     
     def clearAlert(self) -> None:
+        '''Change the stylesheet to the default.'''
         self.alertActive = False
         self._dropdown.setStyleSheet(styles.DROPDOWN)
 
@@ -142,14 +141,19 @@ class TitledLineEdit(QFrame):
     LineEdit that has a title.
     
     Arguments:
-               title - Title of the LineEdit
-               width - Width of the LineEdit
-             spacing - Spacing between the title and LineEdit
-      titlePlacement - Where to place the title.
-      titleAlignment - Alignment of the title
+        title - Title of the LineEdit
+        title_placement - Where to place the title.
+        title_font - QFont to use for the title label.
+        title_alignment - The alignment of the title.
+        width - Width of the LineEdit
+        spacing - Spacing between the title and LineEdit
+        center_stretch - Whether to add strect between the Title and LineEdit.
+        padding - Padding on the ends.
+        center_padding - Padding between the Title and LineEdit.
+        placeholder - Placeholder text.
     '''
     def __init__(self, *, title: str, title_placement: Literal['top', 'side'], 
-                 title_font: QFont = fonts.DEFAULT,
+                 title_font: QFont = QFont(fonts.DEFAULT),
                  title_alignment: Literal['left', 'right', 'center'] = 'left',
                  spacing: int = 10, width: int = 100, center_stretch: bool = False,
                  padding: tuple[int:int] = (0,0), center_padding: int = 0, placeholder: str = ''):
@@ -201,7 +205,12 @@ class TitledLineEdit(QFrame):
         return self._entry.text().strip()
     
     def setText(self, text: str) -> None:
-        '''Set the text in the LineEdit'''
+        '''
+        Set the text in the LineEdit
+        
+        Arguments:
+            text - The text to set.
+        '''
         self._entry.setText(text)
 
     def clear(self) -> None:
@@ -224,15 +233,23 @@ class TitledLabel(QFrame):
     Label that has a title.
     
     Arguments: 
-        title - 
+        title - The title.
+        text - The text of the Label.
+        title_font - QFont to use for the Title.
+        text_font - QFont to use for the Label.
+        spacing - Spacing between the Title and Label.
+        underline - Whether to have the Title underlined.
+        bold - Whether to bold the Title.
     '''
-    def __init__(self, title: str, text: str, title_font: QFont = fonts.DEFAULT, 
-                 text_font: QFont = fonts.DEFAULT, spacing: int = 3, underline: bool = True):
+    def __init__(self, title: str, text: str, title_font: QFont = QFont(fonts.DEFAULT), bold: bool = True,
+                 text_font: QFont = QFont(fonts.DEFAULT), spacing: int = 3, underline: bool = True):
         super().__init__()
         
-        text_font.setUnderline(underline)
+        title_font.setUnderline(underline)
+        title_font.setBold(bold)
+        
         # Widgets
-        titleLabel = BasicLabel(text=title, underline=True, font=title_font)
+        titleLabel = BasicLabel(text=title, underline=underline, font=title_font)
         textLabel = BasicLabel(text=text, font=text_font)
         
         # Layouts
@@ -247,9 +264,24 @@ class TitledLabel(QFrame):
         self.setLayout(mainLayout)
 
 class BasicLabel(QLabel):
-    def __init__(self, text: str = None, *, font: QFont = fonts.DEFAULT, alignment = gui.ALIGN_CENTER, underline: bool = False, stylesheet: str = None, width: int = None):
+    '''
+    QLabel but you can create/config it with less lines of code.
+    
+    Arguments:
+        text - The text of the label.
+        font - QFont of the label.
+        alignment - Alignment of the text of the label.
+        underline - Whether to underline the text.
+        bold - Whether to bold the text.
+        stylesheet - The stylesheet to use.
+        width - The value of the width.
+    '''
+    def __init__(self, text: str = None, *, font: QFont = QFont(fonts.DEFAULT),
+                 alignment: Qt.AlignmentFlag = gui.ALIGN_CENTER, underline: bool = False,
+                 stylesheet: str = None, width: int = None, bold: bool = False):
         super().__init__(parent=None, text=text)
         font.setUnderline(underline)
+        font.setBold(bold)
         self.setFont(font)
         self.setAlignment(alignment)
         if width:
@@ -258,7 +290,19 @@ class BasicLabel(QLabel):
             self.setStyleSheet(stylesheet)
 
 class BasicPushButton(QPushButton):
-    def __init__(self, *, text: str = None, font: QFont = fonts.DEFAULT, width: int = 100, height: int = 25, stylesheet: str = None, icon: QIcon = None, flat: bool = False):
+    '''
+    QPushButton but you can create/config it with less lines of code.
+    
+    Arguments:
+        text - Text of the button.
+        font - QFont of the button.
+        width - Value of the width.
+        height - Value of the height.
+        stylesheet - Stylesheet to use.
+        icon - The QIcon to use.
+        flat - Whether to make the button flat.
+    '''
+    def __init__(self, *, text: str = None, font: QFont = QFont(fonts.DEFAULT), width: int = 100, height: int = 25, stylesheet: str = None, icon: QIcon | None = None, flat: bool = False):
         super().__init__(parent=None, text=text)    
         self.setFont(font)
         self.setFixedHeight(height)
@@ -271,7 +315,15 @@ class BasicPushButton(QPushButton):
             self.setIcon(icon)
 
 class BasicComboBox(QComboBox):
-    def __init__(self, *, font: QFont = fonts.DEFAULT, width: int = None, stylesheet: str = None):
+    '''
+    QComboBox but you can create/config it with less lines of code.
+    
+    ArgumentsL
+        font - QFont to use.
+        width - Value of the width.
+        stylesheet - Stylesheet to use.
+    '''
+    def __init__(self, *, font: QFont = QFont(fonts.DEFAULT), width: int = None, stylesheet: str = None):
         super().__init__(parent=None)
         self.setFont(font)
         if width:
@@ -280,7 +332,16 @@ class BasicComboBox(QComboBox):
             self.setStyleSheet(stylesheet)
             
 class BasicLineEdit(QLineEdit):
-    def __init__(self, *, font: QFont = fonts.DEFAULT, width: int = None, stylesheet: str = None, placeholder: str = None):
+    '''
+    QLineEdit but you can create/config it with less lines of code.
+    
+    Arguments:
+        font - QFont to use.
+        width - Value of the width.
+        stylesheet - Stylesheet to use.
+        placeholder - Placeholder text.
+    '''
+    def __init__(self, *, font: QFont = QFont(fonts.DEFAULT), width: int = None, stylesheet: str = None, placeholder: str = None):
         super().__init__(parent=None)
         self.setFont(font)
         if width:
@@ -291,7 +352,15 @@ class BasicLineEdit(QLineEdit):
             self.setText(placeholder)
         
 class BasicCheckbox(QCheckBox):
-    def __init__(self, text: str, *, font: QFont = fonts.DEFAULT, checked: bool = False):
+    '''
+    QComboBox but you can create/config it with less lines of code.
+    
+    Arguments:
+        text - The text of the Checkbox.
+        font - QFont to use.
+        checked - Whether to start the Checkbox as checked.
+    '''
+    def __init__(self, text: str, *, font: QFont = QFont(fonts.DEFAULT), checked: bool = False):
         super().__init__(parent=None, text=text)
         self.setFont(font)
         if checked:
@@ -472,7 +541,6 @@ class ComboCommandInputs(QFrame):
     
     Arguments:
         control_manager - The ControlManager
-    
     '''
     def __init__(self, control_manager: ControlManager, parent=None):
         super().__init__(parent)
@@ -529,7 +597,7 @@ class ComboCommandInputs(QFrame):
         self._addButton.clicked.connect(self.add)
 
     def clear_inputs(self) -> None:
-        """Clear all the inputs"""
+        '''Clear all the inputs'''
         self._nicknameInput.clear()
         self._key1Input.clear()
         self._key2Input.clear()
@@ -775,18 +843,24 @@ class ControlManager(QFrame):
         Add a new preset and set it into the dropdown
         
         Arguments:
-            name - name of the preset to add
+            name - Name of the preset to add
         '''
         self._presetDropdown.addItem(name)
         self._presetDropdown.setCurrentText(name)
         self.signals.clearContainer.emit()
     
-    def set_channel_name(self, name: str) -> None:
-        self._twitchManager.set_channel_name(name)
+    def set_channel_name(self, channel_name: str) -> None:
+        '''
+        Set a different channel name.
+        
+        Arguments:
+            channel_name - The channel name.
+        '''
+        self._twitchManager.set_channel_name(channel_name)
     
     @Slot()
     def new_preset(self) -> None:
-        '''Create a popup that prompts for the new preset name'''
+        '''Create a popup that prompts for the new preset name then creates it.'''
         name, ok = QInputDialog.getText(self, "New Preset Name", "Give name for preset.", QLineEdit.Normal, "")
         if name and ok:
             cfg.create_preset(preset_name=name)
@@ -859,22 +933,41 @@ class ControlManager(QFrame):
         self._playLayout.setCurrentWidget(self._playButton)
         self._twitchManager.pause()
 
-    def alert(self, alert: Literal['preset', 'channel']) -> None:
+    def alert(self, alert: str) -> None:
+        '''
+        If Preset or Channel are empty when trying to start, then show an uh-oh.
+        
+        Arguments:
+            alert - The alert to set.
+        '''
         match alert:
-            case 'preset':
+            case alerts.EMPTY_PRESET:
                 self._presetDropdown.alert()
-            case 'channel':
+            case alerts.EMPTY_CHANNEL_NAME:
                 self._channelInput.alert()
 
-    def clear_alert(self, alert: Literal['preset', 'channel']) -> None:
+    def clear_alert(self, alert: str) -> None:
+        '''
+        Clear an alert.
+        
+        Arguments:
+            alert - The alert to clear.
+        '''
         match alert:
-            case 'preset':
+            case alerts.EMPTY_PRESET:
                 self._presetDropdown.clearAlert()
-            case 'channel':
+            case alerts.EMPTY_CHANNEL_NAME:
                 self._channelInput.clearAlert()
 
 # Containers 
 class CommandContainer(QFrame):
+    '''
+    Container for the Command widgets.
+    
+    Arguments:
+        control_manager - The ControlManager
+        cmd_type - The type of commands this is for.
+    '''
     def __init__(self, control_manager: ControlManager, cmd_type: Literal['single', 'combo'], parent=None):
         super().__init__(parent)
         self._presetManager = control_manager
@@ -882,7 +975,7 @@ class CommandContainer(QFrame):
         self._existingNicknames: list[str] = []
         self._nextRow = 0
         self._nextColumn = 0
-        self._widgetCache: list[SingleCommandInputs | ComboCommandInputs] = []
+        self._widgetCache: list[Command] = []
         self.signals = ContainerSignals()
         
         self.setFixedSize(gui.COMMAND_CONTAINER_QSIZE)     
@@ -900,8 +993,14 @@ class CommandContainer(QFrame):
         rootLayout.addStretch()
         self.setLayout(rootLayout)
     
-    @Slot(object)
+    @Slot(Command)
     def add(self, cmd: Command) -> None:
+        '''
+        Add a Command widget to the container.
+        
+        Arguments:
+            cmd - The Command widget to add.
+        '''
         if cmd.nickname in self._existingNicknames:
             return
         else:
@@ -917,6 +1016,12 @@ class CommandContainer(QFrame):
             self._mainLayout.setColumnStretch(self._nextColumn, 1)
     
     def delete(self, nickname: str) -> None:
+        '''
+        Delete a Command widget from the container.
+        
+        Arguments:
+            nickname - Nickname of the Command to delete.
+        '''
         preset = self._presetManager.get_preset()
         toRemove = None
         for widget in self._widgetCache:
@@ -930,10 +1035,16 @@ class CommandContainer(QFrame):
         self.reorder()
         cfg.remove_command(preset_name=preset, nickname=nickname, cmd_type=self._cmdType)
 
-    def fill(self, preset: str) -> None:
+    def fill(self, preset_name: str) -> None:
+        '''
+        Fill the container with Command widgets for the selected Preset.
+        
+        Arguments:
+            preset_name - Name of the Preset to use to fill.
+        '''
         self.clear()
-        if preset and preset in list(PRESETS.keys()):
-            allCmds = PRESETS[preset][self._cmdType]
+        if preset_name and preset_name in list(PRESETS.keys()):
+            allCmds = PRESETS[preset_name][self._cmdType]
             for cmd in allCmds:
                 match self._cmdType:
                     case 'single':
@@ -943,6 +1054,7 @@ class CommandContainer(QFrame):
                 self.add(newCmd)
             
     def reorder(self) -> None:
+        '''Reorder the Command widgets when one is deleted.'''
         self._nextColumn = 0
         self._nextRow = 0
         for widget in self._widgetCache:
@@ -958,6 +1070,7 @@ class CommandContainer(QFrame):
                 self._mainLayout.setColumnStretch(self._nextColumn, 1)
     
     def clear(self) -> None:
+        '''Remove all Command widgets from the container.'''
         self._nextColumn = 0
         self._nextRow = 0
         while self._mainLayout.count():
