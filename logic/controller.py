@@ -3,6 +3,61 @@ import time
 from constants import *
 from platform_connections import *
 from typing import Literal
+from configurations import PRESETS
+
+def get_key(preset_name: str, chat_cmd: str) -> tuple[str, str, int | tuple, str, int]:
+    '''
+    Get the key to be pressed based on the chat command.
+    
+    Arguments:
+        preset_name - The name of the Preset to look into.
+        chat_cmd - The chat message of the command.
+    '''
+    preset: dict = PRESETS[preset_name]
+    singles: list[dict] = preset[strs.SINGLE]
+    combos: list[dict] = preset[strs.COMBO]
+    key: str | tuple = None
+    action: str = None
+    prob: int = None
+    foundCmd: dict = None
+    for cmd in singles:
+        nickname = list(cmd.keys())[0]
+        pressCmd = cmd[nickname][strs.PRESS]
+        holdCmd = cmd[nickname][strs.HOLD]
+        if chat_cmd == pressCmd:
+            foundCmd = cmd[nickname]
+            action = strs.PRESS
+            break
+        elif chat_cmd == holdCmd:
+            foundCmd = cmd[nickname]
+            action = strs.HOLD
+            break
+        else:
+            continue
+    
+    if foundCmd:
+        key = foundCmd[strs.KEY]
+        prob = cmd[nickname][strs.PROBABILITY]
+    else:
+        for cmd in combos:
+            nickname = list(cmd.keys())[0]
+            pressCmd = cmd[nickname][strs.PRESS]
+            holdCmd = cmd[nickname][strs.HOLD]
+            if chat_cmd == pressCmd:
+                foundCmd = cmd[nickname]
+                action = strs.PRESS
+                break
+            elif chat_cmd == holdCmd:
+                foundCmd = cmd[nickname]
+                action = strs.HOLD
+                break
+            else:
+                continue
+        
+        key = (foundCmd[strs.KEY1], foundCmd[strs.KEY2])
+        prob = foundCmd[strs.PROBABILITY]
+        
+    return key, action, prob
 
 def hold_key(key: str, *, duration: int = keys.HOLD_DURATION) -> None:
     '''

@@ -13,7 +13,7 @@ class MainWindow(wdgts.CustomQMainWindow):
         super().__init__()
 
         self.setStyleSheet(styles.MAIN_WINDOW)
-        self.setFixedSize(gui.MAIN_WINDOW_SIZE)
+        self.setFixedSize(gui.sizes.MAIN_WINDOW)
         self.setWindowTitle("Ez Twitch Plays")
         
         self.setBackgroundColor(colors.PURPLE)
@@ -43,10 +43,10 @@ class TwitchPlays(wdgts.CustomQWidget):
         self.setBackgroundColor(colors.PURPLE)
         
         mainLayout = wdgts.NoPadVBoxLayout()
-        mainLayout.setAlignment(gui.ALIGN_CENTER)
+        mainLayout.setAlignment(gui.format.ALIGN_CENTER)
         self.setLayout(mainLayout)
         
-        titleLabel = wdgts.BasicLabel(text="Ez Twitch Plays", alignment=gui.ALIGN_CENTER, font=fonts.TITLE, underline=True)
+        titleLabel = wdgts.BasicLabel(text="Ez Twitch Plays", alignment=gui.format.ALIGN_CENTER, font=fonts.TITLE, underline=True)
         self._controlManager = wdgts.ControlManager()
         self._singleInputs = wdgts.SingleCommandInputs(control_manager=self._controlManager)
         self._comboInputs = wdgts.ComboCommandInputs(control_manager=self._controlManager)
@@ -67,7 +67,7 @@ class TwitchPlays(wdgts.CustomQWidget):
         headerLayout = wdgts.NoPadHBoxLayout()
         headerLayout.addStretch()
         headerLayout.addSpacing(620)
-        headerLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
+        headerLayout.addWidget(titleLabel, alignment=gui.format.ALIGN_CENTER)
         headerLayout.addSpacing(390)
         headerLayout.addLayout(headerButtonLayout)
         headerLayout.addStretch()

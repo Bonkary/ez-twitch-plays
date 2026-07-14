@@ -36,9 +36,9 @@ class Export(CustomQDialog):
         exportButton = wdgts.BasicPushButton(text="Export", stylesheet="font-size: 15px;", width=200, height=50)
         
         # Layouts
-        self.setFixedSize(gui.EXPORT_WINDOW_SIZE)
+        self.setFixedSize(gui.sizes.EXPORT_WINDOW)
         mainLayout = wdgts.NoPadVBoxLayout()
-        mainLayout.setAlignment(gui.ALIGN_CENTER)
+        mainLayout.setAlignment(gui.format.ALIGN_CENTER)
         
         #   Preset Layout
         presetsLayout = QGridLayout()
@@ -57,17 +57,17 @@ class Export(CustomQDialog):
         
         #   Main Layout
         mainLayout.addSpacing(20)
-        mainLayout.addWidget(title, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(title, alignment=gui.format.ALIGN_CENTER)
         mainLayout.addSpacing(20)
-        mainLayout.addWidget(selectTitle, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(selectTitle, alignment=gui.format.ALIGN_CENTER)
         mainLayout.addSpacing(15)
         mainLayout.addLayout(presetsLayout)
         mainLayout.addStretch()
-        mainLayout.addWidget(self._selectAllCheckbox, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(self._selectAllCheckbox, alignment=gui.format.ALIGN_CENTER)
         mainLayout.addSpacing(10)
-        mainLayout.addWidget(self._saveCheckbox, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(self._saveCheckbox, alignment=gui.format.ALIGN_CENTER)
         mainLayout.addSpacing(10)
-        mainLayout.addWidget(self._clipboardCheckbox, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(self._clipboardCheckbox, alignment=gui.format.ALIGN_CENTER)
         mainLayout.addSpacing(10)
         mainLayout.addWidget(exportButton)
         mainLayout.addSpacing(15)
@@ -150,11 +150,12 @@ class Help(CustomQDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.setFixedSize(gui.HELP_WINDOW_SIZE)
+        self.setFixedSize(gui.sizes.HELP_WINDOW)
+        self.setWindowTitle("AHHHHHHHH HELP ME!")
         
         selector = wdgts.HelpSelection()
         self._display = wdgts.HelpDisplay()
-        self._backButton = wdgts.BasicPushButton(text="Back", hide=True, width=150, height=40)
+        self._backButton = wdgts.BasicPushButton(text="Back", hide=True, width=150, height=40, font=fonts.HELP_BUTTON)
         
         self.stackedLayout = QStackedLayout()
         self.stackedLayout.insertWidget(gui.index.HELP_SELECTION, selector)
@@ -165,7 +166,7 @@ class Help(CustomQDialog):
         mainLayout.addStretch()
         mainLayout.addLayout(self.stackedLayout)
         mainLayout.addSpacing(30)
-        mainLayout.addWidget(self._backButton, alignment=gui.ALIGN_CENTER)
+        mainLayout.addWidget(self._backButton, alignment=gui.format.ALIGN_CENTER)
         mainLayout.addStretch()
         
         self.setLayout(mainLayout)
@@ -193,12 +194,11 @@ class Help(CustomQDialog):
         self.stackedLayout.setCurrentIndex(gui.index.HELP_SELECTION)
         self._backButton.hide()
 
-
 class ValidKeys(CustomQDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.setFixedSize(gui.VALID_KEYS_WINDOW_SIZE)
+        self.setFixedSize(gui.sizes.VALID_KEYS_WINDOW)
         
         title = wdgts.BasicLabel("Valid Keys", font=fonts.TITLE, underline=True)
         tip = wdgts.BasicLabel("These are what you can type in the 'Key' field.", font=fonts.HELP_TEXT)
@@ -212,8 +212,8 @@ class ValidKeys(CustomQDialog):
         
         halfIndex1 = int(halfIndex1)
         halfIndex2 = int(halfIndex2)
-        keys1 = wdgts.BasicLabel("\n\n".join(keys.VALID_LIST[:halfIndex1]), font=fonts.HELP_TEXT, alignment=gui.ALIGN_LEFT)
-        keys2 = wdgts.BasicLabel("\n\n".join(keys.VALID_LIST[halfIndex2:]), font=fonts.HELP_TEXT, alignment=gui.ALIGN_LEFT)
+        keys1 = wdgts.BasicLabel("\n\n".join(keys.VALID_LIST[:halfIndex1]), font=fonts.HELP_TEXT, alignment=gui.format.ALIGN_LEFT)
+        keys2 = wdgts.BasicLabel("\n\n".join(keys.VALID_LIST[halfIndex2:]), font=fonts.HELP_TEXT, alignment=gui.format.ALIGN_LEFT)
         
         keyLayout = wdgts.NoPadHBoxLayout()
         keyLayout.addStretch()
@@ -227,7 +227,7 @@ class ValidKeys(CustomQDialog):
         mainLayout.addWidget(title)
         mainLayout.addSpacing(10)
         mainLayout.addWidget(tip)
-        mainLayout.addSpacing(100)
+        mainLayout.addSpacing(50)
         mainLayout.addLayout(keyLayout)
         mainLayout.addStretch()
         
