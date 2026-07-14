@@ -24,5 +24,7 @@ Planned Features:
     Mouse inputs
 
     Random inputs bot
-    
+
     Duplicate a preset
+
+    Ability to use OAuth and use Twitch's API. Idk why, but I wanna.
