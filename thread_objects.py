@@ -6,14 +6,15 @@ from platform_connections import Twitch
 from configurations import PRESETS
 import random
 from threading import Event
+import logic.controller as cntrl
 
 THREAD_POOL = QThreadPool.globalInstance()
 EXEC_THREAD = QThread()
 
 def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str, int]:
-    preset = PRESETS[preset_name]
-    singles = preset[strs.SINGLE]
-    combos = preset[strs.COMBO]
+    preset: dict = PRESETS[preset_name]
+    singles: list[dict] = preset[strs.SINGLE]
+    combos: list[dict] = preset[strs.COMBO]
     key: str | tuple = None
     action: str = None
     prob: int = None
@@ -22,7 +23,6 @@ def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str,
         nickname = list(cmd.keys())[0]
         pressCmd = cmd[nickname][strs.PRESS]
         holdCmd = cmd[nickname][strs.HOLD]
-        
         if message == pressCmd:
             foundCmd = cmd[nickname]
             action = strs.PRESS
@@ -58,7 +58,7 @@ def get_key(preset_name: str, message: str) -> tuple[str, str, int | tuple, str,
         
     return key, action, prob
 
-class ExecuteWorker(QRunnable):
+class KeyPressWorker(QRunnable):
     def __init__(self, preset_name: str, cmd: str):
         super().__init__()
         self._presetName = preset_name
@@ -66,13 +66,18 @@ class ExecuteWorker(QRunnable):
         
     def run(self) -> None:
         key, action, prob = get_key(preset_name=self._presetName, message=self._cmd)
+        print(key, action, prob)
         if random.randint(1,100) <= prob:
-            print("-------------------------------")
-            if type(key) == tuple:
-                print(f"{key} -- {action} -- {prob}")
+            if type(key) == str:
+                if action == strs.PRESS:
+                    cntrl.press_key(key)
+                else:
+                    cntrl.hold_key(key)
             else:
-                print(f"{key} -- {action} -- {prob}")
-            print("-------------------------------")
+                if action == strs.PRESS:
+                    cntrl.press_combo_key(key)
+                else:
+                    cntrl.hold_combo_key(key)
         else:
             return
 
@@ -86,7 +91,7 @@ class TwitchManager(QObject):
     def __init__(self, channel_name: str, parent=None):
         super().__init__(parent)
         self._isKilled = False
-        self._isPaused = False
+        self._isPaused = True
         self._isStarted = False
         self._twitch = Twitch(channel_name=channel_name)
         self._presetName: str = None
@@ -102,9 +107,10 @@ class TwitchManager(QObject):
     def execute(self, message: str) -> None:
         if self._isPaused:
             return
+        print(message['message'])
         command = message['message']
         if command in PRESETS[self._presetName][strs.VALID_CMDS]:
-            executor = ExecuteWorker(preset_name=self._presetName, cmd=command)
+            executor = KeyPressWorker(preset_name=self._presetName, cmd=command)
             THREAD_POOL.start(executor)
         else:
             return
@@ -146,3 +152,6 @@ class TwitchManager(QObject):
             isSuccess = True
             self._isPaused = False
         return isSuccess
+    
+    
+    

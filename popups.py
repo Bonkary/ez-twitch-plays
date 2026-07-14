@@ -16,7 +16,7 @@ class Export(QDialog):
         self._checkboxes: list[QCheckBox] = []
         
         # Widgets
-        title = wdgts.BasicLabel("Export", font=fonts.TITLE_FONT)
+        title = wdgts.BasicLabel("Export", font=fonts.TITLE)
         selectTitle = wdgts.BasicLabel("Select presets")
         self._selectAllCheckbox = wdgts.BasicCheckbox("Select all")
         self._clipboardCheckbox = wdgts.BasicCheckbox("Copy file to clipboard", checked=SETTINGS[strs.EXPORT][strs.CLIPBOARD])

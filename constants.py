@@ -38,8 +38,7 @@ class colors:
 
 @dataclass
 class gui:
-    MAIN_WINDOW_SIZE = QSize(1600,1000)
-    DEFAULT_FONT_FAMILY = "Arial"
+    MAIN_WINDOW_SIZE = QSize(1700,900)
     
     ALIGN_CENTER = Qt.AlignmentFlag.AlignCenter
     ALIGN_LEFT = Qt.AlignmentFlag.AlignLeft
@@ -53,16 +52,18 @@ class gui:
     BOTTOM_TO_TOP = QBoxLayout.Direction.BottomToTop
     
     EXPORT_WINDOW_SIZE = QSize(300,600)
+    
+    COMMAND_CONTAINER_QSIZE = QSize(620,620)
 
 @dataclass
 class fonts:
     FONT_FAMILY = "Arial"
-    DEFAULT = QFont(FONT_FAMILY, pointSize=15)
-    DEFAULT_LARGE = QFont(FONT_FAMILY, pointSize=20)
-    TITLE_FONT = QFont(FONT_FAMILY, pointSize=20)
-    CONTAINER_TITLE_FONT = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+5)
-    NICKNAME = QFont(gui.DEFAULT_FONT_FAMILY, pointSize=15)
-    CHANNEL = QFont(gui.DEFAULT_FONT_FAMILY, pointSize=15)
+    DEFAULT = QFont(FONT_FAMILY, pointSize=11)
+    DEFAULT_LARGE = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+5)
+    TITLE = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+10)
+    CONTAINER_TITLE = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+5)
+    NICKNAME = QFont(FONT_FAMILY, pointSize=DEFAULT.pointSize()+1)
+    CHANNEL = QFont(FONT_FAMILY, pointSize=15)
 
 @dataclass
 class dirs:
@@ -77,12 +78,21 @@ class files:
     SETTINGS = os.path.join(dirs.CONFIG, 'settings.json')
 
 @dataclass
-class stylesheets:
+class styles:
     DROPDOWN_ALERT = "QComboBox { padding-left: 5px; border-color: %s}" % colors.RED
     DROPDOWN = "QComboBox { padding-left: 5px; border-color: %s}" % colors.BLACK
     LINE_EDIT = f"border: 2px solid black; background: {colors.DARK_PURPLE};"
     LINE_EDIT_ALERT = f"border: 2px solid black; background-color: rgba(255, 112, 115, 0.3)"
-    PLAY_BUTTON = f"font-size: 15px; border: 2px solid black; background: {colors.DARK_PURPLE};"
+    PLAY_BUTTON = """
+                QPushButton {
+                    font-size: 15px; 
+                    border: 2px solid black; 
+                    background: %s;
+                }
+                QPushButton:hover {
+                    background: %s;
+                }
+                """ % (colors.DARK_PURPLE, colors.DARK_PURPLE)
     STOP_BUTTON = f"font-size: 15px; border: 2px solid black; background: {colors.RED};"
     TRASH_BUTTON = """
                 QPushButton {
@@ -93,7 +103,7 @@ class stylesheets:
                 QPushButton:hover {
                     background: %s    
                 }
-        """ % colors.DARK_PURPLE
+                """ % colors.DARK_PURPLE
     MAIN_WINDOW = """
             QPushButton {
                 font-size: 15px;
@@ -112,7 +122,7 @@ class stylesheets:
             QLabel {
                 color: %s;
             }
-        """ % (colors.DARK_PURPLE, colors.PURPLE, colors.DARK_PURPLE, colors.DEFAULT_TEXT)
+            """ % (colors.DARK_PURPLE, colors.PURPLE, colors.DARK_PURPLE, colors.DEFAULT_TEXT)
     
 @dataclass
 class dialog:
@@ -134,7 +144,11 @@ class dialog:
         IMPORT_EXPORT = "You can also import and export presets. When you export a preset, you can choose to save it and whether to copy the file to the clipboard or not."
         PLAY = "Once you have your preset and channel name, you can go ahead and hit that play button and it'll start taking in commands."
 
-
+@dataclass
+class keys:
+    class const:
+        HOLD_DURATION = 1.5
+        PRESS_DURATION = 0.2
 
 
 

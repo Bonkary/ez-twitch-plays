@@ -1,19 +1,18 @@
-from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget, QPushButton
+from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget, QPushButton, QScrollArea
+from PySide6.QtGui import QPalette
 import widgets as wdgts
 from constants import *
 import sys
 from thread_objects import EXEC_THREAD
 from platform_connections import KILLER
 import time
-import faulthandler
-# faulthandler.enable()
 
 class MainWindow(QMainWindow):
     '''Main Window to hold everything'''
     def __init__(self):
         super().__init__()
 
-        self.setStyleSheet(stylesheets.MAIN_WINDOW)
+        self.setStyleSheet(styles.MAIN_WINDOW)
         self.setFixedSize(gui.MAIN_WINDOW_SIZE)
         self.setWindowTitle("Ez Twitch Plays")
         
@@ -37,21 +36,18 @@ class MainWindow(QMainWindow):
         EXEC_THREAD.terminate()
         sys.exit(0)
 
-class TwitchPlays(QWidget):
+class TwitchPlays(wdgts.CustomQWidget):
     '''Primary widget for the app'''
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setAutoFillBackground(True)
-        bg = self.palette()
-        bg.setColor(self.backgroundRole(), colors.PURPLE)
-        self.setPalette(bg)
+        self.setBackgroundColor(colors.PURPLE)
         
         mainLayout = wdgts.NoPadVBoxLayout()
         mainLayout.setAlignment(gui.ALIGN_CENTER)
         self.setLayout(mainLayout)
         
-        titleLabel = wdgts.BasicLabel(text="Ez Twitch Plays", alignment=gui.ALIGN_CENTER, font=fonts.TITLE_FONT)
+        titleLabel = wdgts.BasicLabel(text="Ez Twitch Plays", alignment=gui.ALIGN_CENTER, font=fonts.TITLE, underline=True)
         self._controlManager = wdgts.ControlManager()
         self._singleInputs = wdgts.SingleCommandInputs(control_manager=self._controlManager)
         self._comboInputs = wdgts.ComboCommandInputs(control_manager=self._controlManager)
@@ -75,6 +71,7 @@ class TwitchPlays(QWidget):
         inputsLayout.addWidget(self._controlManager)
         inputsLayout.addWidget(self._comboInputs)
         
+        
         #   Containers Layout
         containerLayout = wdgts.NoPadHBoxLayout()
         containerLayout.addSpacing(20)
@@ -83,8 +80,12 @@ class TwitchPlays(QWidget):
         containerLayout.addWidget(self._comboCommandContainer)
         containerLayout.addSpacing(20)
         
+        # singleScrollArea = QScrollArea()
+        # singleScrollArea.setBackgroundRole(QPalette.Dark)
+        # singleScrollArea.setLayout(containerLayout)
+        
         #   Main Layout
-        mainLayout.addSpacing(20)
+        mainLayout.addSpacing(10)
         mainLayout.addWidget(titleLabel, alignment=gui.ALIGN_CENTER)
         mainLayout.addSpacing(10)
         mainLayout.addLayout(inputsLayout)
