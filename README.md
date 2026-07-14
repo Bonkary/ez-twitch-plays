@@ -5,13 +5,14 @@ It seemed all other projects required for you to poke around in the code to get 
 
 The streaming platform connection code is based off of DougDoug's code (also shoutout Ottomated and DDark), although it's been altered greatly.
 Another shoutout to Xenova for making twitch_chat_irc. You made my life easy.
-https://github.com/xenova/twitch-chat-irc
 
 Planned Features:
 
     - Background game control (if possible. It's kinda ambitious.)
 
     - Split chat alphabetically
+
+    - "Multiplayer"
 
     - Timer for switching who has control
 
