@@ -22,7 +22,7 @@ THREAD_POOL = QThreadPool.globalInstance()
 EXEC_THREAD = QThread()
 KILL_THREADS_FLAG = Event()
 
-DEV_ON_MAC = True
+DEV_ON_MAC = False
 
 @dataclass
 class strs:

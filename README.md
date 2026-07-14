@@ -9,13 +9,13 @@ Another shoutout to Xenova for having made [twitch_chat_irc](https://github.com/
 
 **NOTE: If you are having an issue, you can let me know by creating a new issue under the 'Issues' tab at the top of this webpage.**
 
-Planned Features:
+Hopeful Features:
 
     - Youtube.
 
     - Background game control (if possible. It's kinda ambitious.)
 
-    - "Multiplayer"
+    - Multiplayer
 
         - Split chat alphabetically
 
@@ -23,16 +23,8 @@ Planned Features:
 
         - Random inputs bot
 
-    - Export something to put commands into a bot
-
-    - Tutorial
-
-    - See available keys
-
     - Mouse inputs
 
-    - Duplicate a preset
-
-    - Ability to use OAuth and use Twitch's API. Idk why, but I wanna. Maybe cool things later? Idk.
+    - OAuth and use Twitch's API. Idk why, but I wanna. Maybe cool things later? Idk.
 
     - XIM type inputs, but that would cost money to test, so... idk
