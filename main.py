@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QFrame, QApplication, QMainWindow, QLabel, QWidget, QPushButton, QScrollArea
-from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QApplication
 import widgets as wdgts
 from constants import *
 import sys

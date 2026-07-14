@@ -1,20 +1,16 @@
-import sys
 from PySide6.QtCore import Qt, Slot, Signal, QObject, QTimer
 from PySide6.QtWidgets import (
     QFrame, QHBoxLayout, QVBoxLayout, QLabel,
     QComboBox, QLineEdit, QPushButton, QCheckBox,
     QInputDialog, QGridLayout, QFileDialog, QStyle,
     QMessageBox, QStackedLayout, QWidget, QMainWindow)
-from PySide6.QtGui import QPalette, QFont, QIcon
+from PySide6.QtGui import QFont, QIcon
 from constants import *
 from typing import Literal, Any
 from configurations import PRESETS, SETTINGS
 import configurations as cfg
-import shutil
 import json
-import subprocess
 import popups
-import time
 from thread_objects import TwitchPlaysManager
 
 # TODO: Slots and Signals decorating type shit. Gotta get that marginal performance boost that absolutely no one will ever notice.
