@@ -13,7 +13,7 @@ Hopeful Features:
 
     - Youtube.
 
-    - Background game control (if possible. It's kinda ambitious.)
+    - Background game control (if possible. It's kinda ambitious for me.)
 
     - Multiplayer
 
@@ -27,4 +27,4 @@ Hopeful Features:
 
     - OAuth and use Twitch's API. Idk why, but I wanna. Maybe cool things later? Idk.
 
-    - XIM type inputs, but that would cost money to test, so... idk
+    - XIM type inputs, but that would cost money to test as I don't have one, so... idk.
