@@ -9,6 +9,8 @@ Another shoutout to Xenova for having made [twitch_chat_irc](https://github.com/
 
 Planned Features:
 
+    - Youtube.
+
     - Background game control (if possible. It's kinda ambitious.)
 
     - "Multiplayer"

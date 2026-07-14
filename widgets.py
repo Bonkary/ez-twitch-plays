@@ -408,7 +408,6 @@ class NoPadVBoxLayout(QVBoxLayout):
 
 
 # Inputs
-# TODO: dont allow duplicate nickname
 class SingleCommandInputs(QWidget):
     '''
     This is where all the inputs are for the single commands.

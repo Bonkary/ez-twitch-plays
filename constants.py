@@ -166,8 +166,8 @@ class dialog:
     class help:
         CONNECT = [
             "Towards the top, there is a place to enter your Twitch channel name.",
-            "Once you click Start Playing, the connection will be made.",
-            "That's all you gotta know."
+            "Make sure you type the name correctly, as it won't tell you whether it's valid or not.",
+            "Once you click Start Playing, the connection will be made."
         ]
         COMMANDS = [
             "Input Fields:\n",
