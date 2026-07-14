@@ -8,13 +8,23 @@ Another shoutout to Xenova for making twitch_chat_irc. You made my life easy.
 https://github.com/xenova/twitch-chat-irc
 
 Planned Features:
-    Background game control (if possible. It's kinda ambitious.)
-    Split chat alphabetically
-    Timer for switching who has control
-    Export something to put commands into a bot
-    Tutorial
-    See available keys
-    Mouse inputs
-    Random inputs bot
-    Duplicate a preset
-    Ability to use OAuth and use Twitch's API. Idk why, but I wanna.
+
+    - Background game control (if possible. It's kinda ambitious.)
+
+    - Split chat alphabetically
+
+    - Timer for switching who has control
+
+    - Export something to put commands into a bot
+
+    - Tutorial
+
+    - See available keys
+
+    - Mouse inputs
+
+    - Random inputs bot
+
+    - Duplicate a preset
+
+    - Ability to use OAuth and use Twitch's API. Idk why, but I wanna.
