@@ -6,7 +6,7 @@ from configurations import PRESETS
 import random
 from threading import Event
 if not ON_MAC:
-    import logic.controller as cntrls
+    import logic.controller as cntrl
 
 
 def get_key(preset_name: str, chat_cmd: str) -> tuple[str, str, int | tuple, str, int]:
