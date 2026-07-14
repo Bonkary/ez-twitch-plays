@@ -29,10 +29,9 @@ class TitledDropdown(QFrame):
     General Combobox that has a label to 'ID' it, I guess?
     
     Arguments:
-              title - Text above the dropdown
-          titleFont - Font of the title
-     titlePlacement - Where to place the title
-    
+        title - Text above the dropdown
+        titleFont - Font of the title
+        titlePlacement - Where to place the title
     '''
     def __init__(self, *, title: str, title_placement: Literal['top', 'side'], font: QFont = fonts.DEFAULT, values: list = None):
         super().__init__()
@@ -447,9 +446,9 @@ class SingleCommandInputs(QFrame):
                 cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=strs.SINGLE)
                 self._presetManager.add_preset(name)
         else:
-            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=strs.SINGLE)
+            cfg.update_preset(preset_name=presetName, cmd=cmd, cmd_type=strs.SINGLE)
         
-        newCmd = Command(cmd=cmd, type='single')
+        newCmd = Command(cmd=cmd, type=strs.SINGLE)
         self.signals.addCommand.emit(newCmd)
         self.clear_inputs()
 
@@ -606,7 +605,7 @@ class ComboCommandInputs(QFrame):
                 cfg.create_preset(preset_name=name, cmd=cmd, cmd_type=strs.COMBO)
                 self._presetManager.add_preset(name)
         else:
-            cfg.update_preset(preset=presetName, cmd=cmd, cmd_type=strs.COMBO)
+            cfg.update_preset(preset_name=presetName, cmd=cmd, cmd_type=strs.COMBO)
         
         newCmd = Command(cmd=cmd, type='combo')
         self.signals.addCommand.emit(newCmd)
@@ -819,7 +818,7 @@ class ControlManager(QFrame):
                 self.signals.clearContainer.emit()
                 self._presetDropdown.removeItem(preset)
                 self._presetDropdown.setCurrentIndex(-1)
-                cfg.remove_preset(preset)
+                cfg.delete_preset(preset)
             else:
                 return
 
@@ -918,7 +917,7 @@ class CommandContainer(QFrame):
         self._widgetCache.remove(toRemove)
         toRemove.deleteLater()
         self.reorder()
-        cfg.remove_command(preset=preset, nickname=nickname, cmd_type=self._cmdType)
+        cfg.remove_command(preset_name=preset, nickname=nickname, cmd_type=self._cmdType)
 
     def fill(self, preset: str) -> None:
         self.clear()
