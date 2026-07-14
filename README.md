@@ -7,7 +7,7 @@ The streaming platform connection code is based off of DougDoug's code (also sho
 
 Another shoutout to Xenova for having made [twitch_chat_irc](https://github.com/xenova/twitch-chat-irc). You've unknowingly made my life slightly easier.
 
-NOTE: If you are having an issue, you can let me know by creating a new issue under the Issues tab at the top of this webpage.
+**NOTE: If you are having an issue, you can let me know by creating a new issue under the Issues tab at the top of this webpage.**
 
 Planned Features:
 
