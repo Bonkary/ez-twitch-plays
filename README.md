@@ -4,6 +4,7 @@ This is a GUI that allows streamers who don't know jack-diddly-squat about codin
 It seemed all other projects required for you to poke around in the code to get things to work. With this, you shouldn't need to touch any code. I tried to build it for the dumbos (kinda kidding).
 
 The streaming platform connection code is based off of DougDoug's code (also shoutout Ottomated and DDark), although it's been altered greatly.
+
 Another shoutout to Xenova for making twitch_chat_irc. You made my life easy.
 
 Planned Features:
