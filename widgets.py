@@ -1255,3 +1255,6 @@ class ContainerSignals(QObject):
         
 class WidgetSignals(QObject):
     textChanged = Signal()
+
+
+

@@ -1,12 +1,14 @@
 # Ez Twitch Plays
 This is a GUI that allows streamers who don't know jack-diddly-squat about coding to do Twitch Plays.
 
-It seemed all other projects required for you to poke around in the code to get things to work. With this, you shouldn't need to touch any code. I tried to build it for the dumbos (jk kinda).
+It seemed all other projects required for you to poke around in the code to get things to work. With this, you shouldn't need to touch any code. I tried to build it for the dumbos (kinda kidding).
 
-The streaming platform connection code is based off of DougDoug's code (also shoutout Ottomated and DDark). I just changed a whole lot of it. And added stuff.
+The streaming platform connection code is based off of DougDoug's code (also shoutout Ottomated and DDark), although it's been altered greatly.
+Another shoutout to Xenova for making twitch_chat_irc. You made my life easy.
+https://github.com/xenova/twitch-chat-irc
 
 Planned Features:
-    Background control (hopefully)
+    Background control (ambitious for me lol)
     Split chat alphabetically
     Timer for switching who has control
     Export something to put commands into a bot
@@ -14,5 +16,4 @@ Planned Features:
     See available keys
     Mouse inputs
     Random inputs bot
-    Maybe sabotage for channel points? For no reason at all
-    Duplicate presets
+    Duplicate a preset
