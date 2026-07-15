@@ -1,12 +1,9 @@
-import sys
-from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt, Slot, Signal, QObject, QMargins
-from PySide6.QtWidgets import *
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QCheckBox, QGridLayout, QStackedLayout, QFileDialog, QMessageBox
 from constants import *
 import widgets as wdgts
 from configurations import PRESETS, SETTINGS
 import configurations as cfg
-from typing import Literal
 import json
 import subprocess
 import math
@@ -20,7 +17,7 @@ class CustomQDialog(QDialog):
         bg = self.palette()
         bg.setColor(self.backgroundRole(), color)
         self.setPalette(bg)
-
+        
 class Export(CustomQDialog):
     '''Dialog window to choose how to export a Preset.'''
     def __init__(self, parent=None):
@@ -176,6 +173,10 @@ class Help(CustomQDialog):
         selector.presetsButton.clicked.connect(lambda: self.display_help('presets'))
         selector.playButton.clicked.connect(lambda: self.display_help('play'))
         self._backButton.clicked.connect(self.back)
+        
+    def closeEvent(self, event) -> None:
+        self._backButton.hide()
+        self.stackedLayout.setCurrentIndex(gui.index.HELP_SELECTION) 
         
     def display_help(self, selection: str) -> None:
         match selection:

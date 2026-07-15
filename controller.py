@@ -78,7 +78,7 @@ def hold_key(key: str, *, duration: int = keys.HOLD_DURATION) -> None:
 def press_key(key: str) -> None:
     '''Simply presses and releases a key.'''
     pydirectinput.keyDown(key=key)
-    time.sleep(keys.const.PRESS_DURATION)
+    time.sleep(keys.PRESS_DURATION)
     pydirectinput.keyUp(key=key)
 
 def release_key(key: str) -> None:

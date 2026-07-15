@@ -1,15 +1,20 @@
 # Ez Twitch Plays
 This is a GUI that allows streamers who don't know jack-diddly-squat about coding to do Twitch Plays. Don't expect something beautiful, but it works. I think.
 
-It seemed all other projects required for you to poke around in the code to get things to work. With this, you don't *need* to touch any code as it'll be packaged into a .exe file.
+It seemed all other projects required for you to poke around in the code to get things to work. With this, you don't *need* to touch any code or open a command line as it's packaged into a .exe file.
 
 This stemmed from [DougDoug's code](https://github.com/DougDougGithub/TwitchPlays), although it may not be super recognizable anymore... (also shoutout Ottomated and DDark as they helped DougDoug)
 
 Another shoutout to Xenova for having made [twitch_chat_irc](https://github.com/xenova/twitch-chat-irc). You've unknowingly made my life slightly easier.
 
+
+## How To Setup
+
+On the right hand side of the webpage, there is a 'Releases' section. Click on the current Release.
+
 **NOTE: If you are having any issues, you can let me know by creating a new issue under the 'Issues' tab at the top of this webpage.**
 
-Hopeful Features:
+## Hopeful Features:
 
     - Youtube.
 

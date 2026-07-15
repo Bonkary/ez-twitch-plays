@@ -1,11 +1,10 @@
-from PySide6.QtCore import QRunnable, QObject, Slot, Signal, QEvent
-from typing import Literal
+from PySide6.QtCore import QRunnable, QObject, Signal
 from constants import *
 from platform_connections import Twitch
 from configurations import PRESETS
 import random
 if not DEV_ON_MAC:
-    import logic.controller as cntrl
+    import controller as cntrl
 
 class KeyPressWorker(QRunnable):
     '''Handles all of the key presses. This gets thrown into the QThreadPool'''
@@ -38,7 +37,6 @@ class ManagerSignals(QObject):
     clearPresetAlert = Signal()
     clearChannelAlert = Signal()
 
-# TODO: check if you can change the Twitch channel while playing??
 class TwitchPlaysManager(QObject):
     '''
     Manages all the communication with Twitch.

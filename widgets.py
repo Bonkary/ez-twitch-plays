@@ -48,17 +48,17 @@ class TitledDropdown(QFrame):
         titleFont - Font of the title
         titlePlacement - Where to place the title
     '''
-    def __init__(self, *, title: str, title_placement: Literal['top', 'side'], font: QFont = QFont(fonts.DEFAULT), values: list = None):
+    def __init__(self, *, title: str, title_placement: Literal['top', 'side'], font: QFont = QFont(fonts.DEFAULT), values: list[str] = []):
         super().__init__()
         self.signals = DropwdownSignals()
-        self._values: list[str] = []
+        self._values = values
         self.alertActive = False
         
          # Widgets
         titleLabel = BasicLabel(text=title, font=QFont(font))
         self._dropdown = BasicComboBox(width=200, stylesheet=styles.DROPDOWN)
-        if values:
-            for value in values:
+        if self._values:
+            for value in self._values:
                 self._dropdown.addItem(value)
             self.setCurrentIndex(-1)
         
@@ -122,6 +122,8 @@ class TitledDropdown(QFrame):
         Arguments:
             item - Value to remove from the dropdown.
         '''
+        print(item)
+        print(self._values)
         self._values.remove(item)
         self._dropdown.clear()
         for value in self._values:
@@ -204,6 +206,7 @@ class TitledLineEdit(QFrame):
         
         # Connections
         self.signals.textChanged.connect(lambda: self._entry.textChanged.emit(self.getText()))
+        self._entry.textChanged.connect(self.clearAlert)
         
     def getText(self) -> str:
         '''Get the text from the LineEdit'''
@@ -497,11 +500,11 @@ class SingleCommandInputs(QWidget):
             self._pressCmdInput.alert()
             self._holdCmdInput.alert()
         elif press and not hold:
-            hold = "---"
+            hold = ""
             self._pressCmdInput.clearAlert()
             self._holdCmdInput.clearAlert()
         elif not press and hold:
-            press = "---"
+            press = ""
             self._pressCmdInput.clearAlert()
             self._holdCmdInput.clearAlert()
         else:
@@ -525,7 +528,7 @@ class SingleCommandInputs(QWidget):
         self._keyInput.clear()
         self._pressCmdInput.clear()
         self._holdCmdInput.clear()
-        self._probInput.clear()
+        self._probInput.setText('100')
 
     def add(self) -> None:
         '''Add a new single command.
@@ -631,7 +634,7 @@ class ComboCommandInputs(QWidget):
         self._key2Input.clear()
         self._pressCmdInput.clear()
         self._holdCmdInput.clear()
-        self._probInput.clear()
+        self._probInput.setText('100')
     
     def get_inputs(self) -> dict:
         '''Get all the inputs'''
@@ -806,7 +809,7 @@ class ControlManager(QWidget):
         self._exportButton = BasicPushButton(text='Export')
         self._playButton = BasicPushButton(text="Start Playing", width=600, height=50, stylesheet=styles.PLAY_BUTTON)
         self._stopButton = BasicPushButton(text="Stop Playing", width=600, height=50, stylesheet=styles.STOP_BUTTON)
-        self._presetDropdown = TitledDropdown(title='Preset', title_placement='top', values=PRESETS)
+        self._presetDropdown = TitledDropdown(title='Preset', title_placement='top', values=list(PRESETS.keys()))
         self._channelInput = TitledLineEdit(title="Twitch Channel", title_placement='side',
                                             title_alignment=gui.format.ALIGN_CENTER,
                                             font=fonts.CHANNEL,
@@ -857,10 +860,11 @@ class ControlManager(QWidget):
         self._playButton.clicked.connect(self.play)
         self._stopButton.clicked.connect(self.stop)
         self._channelInput.signals.textChanged.connect(self.set_channel_name)
-        self._twitchManager.signals.noPreset.connect(lambda: self.alert("preset"))
-        self._twitchManager.signals.noChannel.connect(lambda: self.alert("channel"))
-        self._twitchManager.signals.clearPresetAlert.connect(lambda: self.clear_alert("preset"))
-        self._twitchManager.signals.clearChannelAlert.connect(lambda: self.clear_alert("channel"))
+        
+        self._twitchManager.signals.noPreset.connect(self._presetDropdown.alert)
+        self._twitchManager.signals.noChannel.connect(self._channelInput.alert)
+        self._twitchManager.signals.clearPresetAlert.connect(self._presetDropdown.clearAlert)
+        self._twitchManager.signals.clearChannelAlert.connect(self._channelInput.clearAlert)
         
     def get_preset(self) -> str:
         '''Get the current preset from the dropdown'''
@@ -898,6 +902,11 @@ class ControlManager(QWidget):
         '''Import a preset_export.json file (or whatever its named)'''
         path, _ = QFileDialog.getOpenFileName(self, "Select Preset file", "", "JSON files (*.json)")
         if path:
+            msgPopup = QMessageBox(text="\tImporting...\nIt can take a second. Idk why.", standardButtons=QMessageBox.StandardButton.NoButton)
+            msgPopup.setFixedSize(QSize(2000,2000))
+            msgPopup.setFont(fonts.IMPORTING)
+            msgPopup.show()
+            
             with open(path, 'r') as file:
                 newPresets = json.loads(file.read())
             
@@ -906,13 +915,16 @@ class ControlManager(QWidget):
                 presetList.append((preset, newPresets[preset]))
                 self._presetDropdown.addItem(preset)
             cfg.add_imports(presetList)
+            
+        msgPopup.close()
         self.signals.fillContainer.emit(self._presetDropdown.getCurrentText())
     
     @Slot()
     def open_export_window(self) -> None:
         '''Creates the popup for the Export options'''
         if not PRESETS:
-            msg = QMessageBox(self, text="Ye doth have nothin' to export.")
+            msg = QMessageBox(self, text="Ye doth have nothin' to export.", standardButtons=QMessageBox.StandardButton.Ok)
+            msg.setStyleSheet(styles.MESSAGE_BOX_BUTTON)
             msg.setFont(fonts.DEFAULT)
             msg.exec()
             return
@@ -937,23 +949,31 @@ class ControlManager(QWidget):
     @Slot()
     def play(self) -> None:
         '''Start the thread for listening and sending commands'''
+        channel = self._channelInput.getText()
+        preset = self._presetDropdown.getCurrentText()
+        if not channel:
+            self._channelInput.alert()
+        else:
+            self._channelInput.clearAlert()
+            
+        if not preset:
+            self._presetDropdown.alert()
+        else:
+            self._presetDropdown.clearAlert()
+            
+        if not channel or not preset:
+            return
+        
         if not self._twitchManager.channelName:
             self._twitchManager.set_channel_name(self._channelInput.getText())
         if not self._twitchManager.channelName == SETTINGS[strs.CHANNEL_NAME]:
             cfg.update_setting(setting=strs.CHANNEL_NAME, value=self._twitchManager.channelName)
         
-        if self._presetDropdown.alertActive:
-            self._presetDropdown.clearAlert()
-        if self._channelInput.alertActive:
-            self._channelInput.clearAlert()
-        
-        preset = self._presetDropdown.getCurrentText()
+        self._presetDropdown.clearAlert()
         self._twitchManager.set_preset(preset)
-        
         QTimer.singleShot(0, lambda: self._playButton.setText('3...'))
         QTimer.singleShot(1000, lambda: self._playButton.setText('2...'))
         QTimer.singleShot(2000, lambda: self._playButton.setText('1...'))
-        QTimer.singleShot(4000, lambda: self._playButton.setText('Start Playing'))
         
         resumeSuccess = self._twitchManager.resume()
         if resumeSuccess:
@@ -963,6 +983,7 @@ class ControlManager(QWidget):
     
     def stop(self) -> None:
         '''Stop the thread for listening and sending commands'''
+        self._playButton.setText('Start Playing')
         self._playLayout.setCurrentWidget(self._playButton)
         self._twitchManager.pause()
 

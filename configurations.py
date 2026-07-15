@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import ctypes
 from constants import *
 from typing import Literal, Any
 
@@ -111,7 +112,6 @@ def update_presets_file() -> None:
     '''Updates the preset.json file.'''
     with open(files.PRESETS, 'w') as file:
         file.write(json.dumps(PRESETS))
-
 
 # CONFIG
 if not os.path.exists(dirs.CONFIG):

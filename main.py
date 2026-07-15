@@ -1,7 +1,9 @@
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
 import widgets as wdgts
 from constants import *
 import sys
+import os
 import time
 import popups
 
@@ -15,6 +17,7 @@ class MainWindow(wdgts.CustomQMainWindow):
         self.setStyleSheet(styles.MAIN_WINDOW)
         self.setFixedSize(gui.sizes.MAIN_WINDOW)
         self.setWindowTitle("Ez Twitch Plays")
+        self.setWindowIcon(QIcon(os.path.join('.', 'exe', 'EzTP.ico')))
         
         self.setBackgroundColor(colors.PURPLE)
         
@@ -46,6 +49,9 @@ class TwitchPlays(wdgts.CustomQWidget):
         mainLayout.setAlignment(gui.format.ALIGN_CENTER)
         self.setLayout(mainLayout)
         
+        helpWindow = popups.Help(self)
+        validKeysWindow = popups.ValidKeys(self)
+        
         titleLabel = wdgts.BasicLabel(text="Ez Twitch Plays", alignment=gui.format.ALIGN_CENTER, font=fonts.TITLE, underline=True)
         self._controlManager = wdgts.ControlManager()
         self._singleInputs = wdgts.SingleCommandInputs(control_manager=self._controlManager)
@@ -54,9 +60,6 @@ class TwitchPlays(wdgts.CustomQWidget):
         self._comboCommandContainer = wdgts.CommandContainer(cmd_type=strs.COMBO, control_manager=self._controlManager)
         self._helpButton = wdgts.BasicPushButton(text="Help")
         self._validKeysButton = wdgts.BasicPushButton(text="Valid Keys")
-        
-        # Header Layout
-        
         
         #  Header Layout
         headerButtonLayout = wdgts.NoPadHBoxLayout()
@@ -102,8 +105,8 @@ class TwitchPlays(wdgts.CustomQWidget):
         self._controlManager.signals.fillContainer.connect(self._comboCommandContainer.fill)
         self._controlManager.signals.clearContainer.connect(self._comboCommandContainer.clear)
         self._controlManager.signals.clearContainer.connect(self._singleCommandContainer.clear)
-        self._helpButton.clicked.connect(lambda: popups.Help(self).show())
-        self._validKeysButton.clicked.connect(lambda: popups.ValidKeys(self).show())
+        self._helpButton.clicked.connect(helpWindow.exec)
+        self._validKeysButton.clicked.connect(validKeysWindow.show)
 
 if __name__ == "__main__":
     app = QApplication([])

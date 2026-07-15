@@ -107,6 +107,7 @@ class fonts:
     CHANNEL = QFont(FONT_FAMILY, pointSize=DEFAULT_POINT_SIZE+4)
     HELP_TEXT = create_font(family=FONT_FAMILY, point_size=DEFAULT_POINT_SIZE+3)
     HELP_BUTTON = create_font(family=FONT_FAMILY, point_size=DEFAULT_POINT_SIZE+5)
+    IMPORTING = create_font(family=FONT_FAMILY, point_size=DEFAULT_POINT_SIZE+15)
 
 @dataclass
 class dirs:
@@ -162,6 +163,12 @@ class styles:
                 color: %s;
             }
             """ % (colors.DARK_PURPLE, colors.PURPLE, colors.DARK_PURPLE, colors.DEFAULT_TEXT)
+    MESSAGE_BOX_BUTTON = """
+            QPushButton {
+                width: 100px
+            }
+    """
+    
 
 @dataclass
 class dialog:
@@ -169,18 +176,18 @@ class dialog:
     class help:
         CONNECT = [
             "Towards the top, there is a place to enter your Twitch channel name.",
-            "Make sure you type the name correctly, as it won't tell you whether it's valid or not.",
+            "Make sure you type the name correctly, as it won't tell you whether it's valid or not.\n\n",
             "Once you click Start Playing, it will yoink what you typed in and the connection will be made.",
             "If you've already typed one in before, it'll connect to that off the rip.",
             "I've assumed you aren't changing your channel much."
         ]
         COMMANDS = [
-            "Input Fields:\n",
-            "  Nickname - This will be the nickname for the command. It is suggested that you use whatever the command does. (jump, run, etc.)\n",
-            "  Key - The key(s) that is being pressed. You can see the valid keys by pressing the button 'Valid Keys'\n",
-            "  Press Cmd - This is what chat will type to quickly tap the key(s).\n",
-            "  Hold Cmd - This is what chat will type to briefly hold down the key(s).\n",
-            "  Probability - This is the odds (percentage) that the key will actually be pressed. Mainly for large streams or annoying commands.\n",
+            "Input Fields:\n\n",
+            "  Nickname - This will be the nickname for the command. It is suggested that you use whatever the command does. (jump, run, etc.)\n\n",
+            "  Key - The key(s) that is being pressed. You can see the valid keys by pressing the button 'Valid Keys'\n\n",
+            "  Press Cmd - This is what chat will type to quickly tap the key(s).\n\n",
+            "  Hold Cmd - This is what chat will type to briefly hold down the key(s).\n\n",
+            "  Probability - This is the odds (percentage) that the key will actually be pressed. Mainly for large streams or annoying commands.\n\n",
         ]
         PRESETS = [
             "Presets are a collection of Commands.\n",
