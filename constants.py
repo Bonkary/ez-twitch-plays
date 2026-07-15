@@ -195,8 +195,7 @@ class dialog:
             "Click 'Start Playing'.\n",
             "In order for this to work, the game window needs to be in focus.",
             "Otherwise, keys will still be mercilessly 'pressed' on the window you are focused on. That could be messy.\n",
-            "There will be a short delay so that you can switch to the game window.\n",
-            "If I coded in a countdown, then there will be a countdown.\n",
+            "There will be a short 3 second delay so that you can switch to the game window.\n",
             "Have fun."
         ]
 

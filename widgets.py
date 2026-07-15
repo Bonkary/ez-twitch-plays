@@ -473,7 +473,6 @@ class SingleCommandInputs(QWidget):
             try:
                 prob = int(self._probInput.getText())
             except ValueError:
-                print("not a valid value dude") # DEV
                 self._keyInput.alert()
                 return
         else:
@@ -640,9 +639,8 @@ class ComboCommandInputs(QWidget):
             try:
                 prob = int(self._probInput.getText())
             except ValueError:
-                # JUST DEV STUFF RN
-                print("not a valid value dude")
-                prob = 0
+                self._probInput.alert()
+                return
         else:
             prob = 100
         
@@ -750,7 +748,7 @@ class Command(QWidget):
                 keyLabelText = f"Keys: {key1} + {key2}"
         
         # Widgets
-        nicknameLabel = BasicLabel(text=self.nickname, font=fonts.NICKNAME, underline=True, width=200, alignment=gui.format.ALIGN_LEFT)
+        nicknameLabel = BasicLabel(text=self.nickname, font=fonts.NICKNAME, underline=True, width=100, alignment=gui.format.ALIGN_LEFT)
         self.trashButton = BasicPushButton(flat=True, icon=QIcon(trashIcon), stylesheet=styles.TRASH_BUTTON, width=20, height=20)
         pressLabel = BasicLabel(f"Press: {pressCmd}", alignment=gui.format.ALIGN_LEFT)
         holdLabel = BasicLabel(f"Hold: {holdCmd}")
@@ -762,10 +760,11 @@ class Command(QWidget):
         
         #   Nickname Layout
         nicknameLayout = NoPadHBoxLayout()
+        nicknameLayout.addWidget(self.trashButton, alignment=gui.format.ALIGN_LEFT)
+        nicknameLayout.addSpacing(3)
         nicknameLayout.addWidget(nicknameLabel)
-        nicknameLayout.addStretch()
-        nicknameLayout.addWidget(self.trashButton, alignment=gui.format.ALIGN_RIGHT)
-        # nicknameLayout.addSpacing(50)
+        
+        # nicknameLayout.addStretch()
         
         #   Main Layout
         mainLayout.addLayout(nicknameLayout)
@@ -950,9 +949,15 @@ class ControlManager(QWidget):
         
         preset = self._presetDropdown.getCurrentText()
         self._twitchManager.set_preset(preset)
+        
+        QTimer.singleShot(0, lambda: self._playButton.setText('3...'))
+        QTimer.singleShot(1000, lambda: self._playButton.setText('2...'))
+        QTimer.singleShot(2000, lambda: self._playButton.setText('1...'))
+        QTimer.singleShot(4000, lambda: self._playButton.setText('Start Playing'))
+        
         resumeSuccess = self._twitchManager.resume()
         if resumeSuccess:
-            self._playLayout.setCurrentWidget(self._stopButton)
+            QTimer.singleShot(3000, lambda: self._playLayout.setCurrentWidget(self._stopButton))
         else:
             return
     
